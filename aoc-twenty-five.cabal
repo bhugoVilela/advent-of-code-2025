@@ -13,7 +13,6 @@ author:         Author name here
 maintainer:     example@example.com
 copyright:      2025 Author name here
 license:        BSD-3-Clause
-license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
@@ -29,7 +28,6 @@ library
       Day02
       Day03
       Day04
-      Lib
   other-modules:
       Paths_aoc_twenty_five
   autogen-modules:

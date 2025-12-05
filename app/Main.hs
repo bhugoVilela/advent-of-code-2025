@@ -3,9 +3,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 module Main (main) where
 
-import Lib
 import System.IO (readFile')
-import Debug.Trace (traceShowId, traceShow)
 
 import Day01
 import Day02
@@ -14,12 +12,9 @@ import Day04
 import Options.Applicative
 import GHC.List ((!?))
 import Data.Maybe (fromMaybe)
-import Control.Monad (when, forM)
+import Control.Monad (forM)
 import Criterion.Main
-import Criterion (benchmark)
-import qualified Criterion.Main.Options as C
 import Text.Printf (printf)
-import Data.Foldable (traverse_)
 import GHC.IO (evaluate)
 
 data Args = Run { _day :: Int , _part :: Int }

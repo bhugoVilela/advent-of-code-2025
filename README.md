@@ -1,6 +1,9 @@
 # Advent Of Code 2025 - Haskell
----
-[Advent of Code 2025](https://adventofcode.com/2025) has started and this year I'm solving it in Haskell
+
+[Advent of Code 2025](https://adventofcode.com/2025) has started and this year I'm solving it in Haskell.
+
+- You can find the solutions [here](src); 
+- [main](app/Main.hs) is an executable to run/benchmark the solutions.
 
 ## Considerations
 - #1 goal is readable solutions
