@@ -11,16 +11,16 @@
 
 ## Performance
 Benchmarks are measured using criterion on an Apple M1 Pro
-| Day    | Part   | Time (parsing + solving) | std dev  |
-| -------| ------ | ------------------------ | -------- |
-| Day 01 | Part 1 | 3.519 ms                 | 91.85 μs |
-| Day 01 | Part 2 | 3.544 ms                 | 128.5 μs |
-| Day 02 | Part 1 | 1.941 ms                 | 78.96 μs |
-| Day 02 | Part 2 | 1.942 ms                 | 49.10 μs |
-| Day 03 | Part 1 | 36.90 ms                 | 778.4 μs |
-| Day 03 | Part 2 | 24.73 ms                 | 839.2 μs |
-| Day 04 | Part 1 | 8.412 ms                 | 553.0 μs |
-| Day 04 | Part 2 | 96.62 ms                 | 269.1 μs |
+| Day                    | Part   | Time (parsing + solving) | std dev  |
+| -----------------------| ------ | ------------------------ | -------- |
+| [Day 01](src/Day01.hs) | Part 1 | 3.519 ms                 | 91.85 μs |
+| [Day 01](src/Day01.hs) | Part 2 | 3.544 ms                 | 128.5 μs |
+| [Day 02](src/Day02.hs) | Part 1 | 1.941 ms                 | 78.96 μs |
+| [Day 02](src/Day02.hs) | Part 2 | 1.942 ms                 | 49.10 μs |
+| [Day 03](src/Day03.hs) | Part 1 | 36.90 ms                 | 778.4 μs |
+| [Day 03](src/Day03.hs) | Part 2 | 24.73 ms                 | 839.2 μs |
+| [Day 04](src/Day04.hs) | Part 1 | 8.412 ms                 | 553.0 μs |
+| [Day 04](src/Day04.hs) | Part 2 | 96.62 ms                 | 269.1 μs |
 
 ## Running
 
