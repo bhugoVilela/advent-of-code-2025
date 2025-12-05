@@ -12,7 +12,7 @@
 ## Performance
 Benchmarks are measured using criterion on an Apple M1 Pro
 
-![Benchmarks](https://github.com/bhugoVilela/advent-of-code-2025/blob/main/benchmark.png?raw=true)
+![Benchmarks](https://github.com/bhugoVilela/advent-of-code-2025/blob/main/benchmarks.png?raw=true)
 
 | Day                    | Part   | Time (parsing + solving) | std dev  |
 | -----------------------| ------ | ------------------------ | -------- |
