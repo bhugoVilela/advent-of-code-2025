@@ -33,17 +33,13 @@ solvePart2 grid = let finalGrid = removeAll grid
                         else removeAll next
 
 solvePart1 :: Grid -> Int
-solvePart1 = freeRollsOfPaper
-
-freeRollsOfPaper :: Grid -> Int
-freeRollsOfPaper grid = length . filter (<4) . map (getAdjacentRolls grid) . Set.toList $ grid
+solvePart1 grid = length . Set.filter ((<4) . getAdjacentRolls grid) $ grid
 
 getAdjacentRolls :: Grid -> Position -> Int
 getAdjacentRolls grid pos = length . filter (`Set.member` grid) . map (pos +) $ adjacentVectors
-
-{-# NOINLINE adjacentVectors #-}
-adjacentVectors :: [V2 Int]
-adjacentVectors = [V2 a b | a <- [-1..1], b <- [-1..1], a /= 0 || b /=0 ]
+  where
+    adjacentVectors :: [V2 Int]
+    adjacentVectors = [V2 a b | a <- [-1..1], b <- [-1..1], a /= 0 || b /=0 ]
 
 parse :: String -> Grid
 parse str =
