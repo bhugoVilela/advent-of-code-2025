@@ -1,5 +1,4 @@
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE RankNTypes #-}
 module Day01 where
 
 part1 :: String -> Int
@@ -43,9 +42,7 @@ numberOfClicks pos rotation =
         else actualPos /= 0 && actualPos - remainder <= 0
   in totalRotations  + if remainderClicks then 1 else 0
 
-
 normalizeRotation :: Int -> Int
 normalizeRotation n
   | n >= 0    = n `mod` 100
   | otherwise = (100 - (abs n) `mod` 100) `mod` 100
-
