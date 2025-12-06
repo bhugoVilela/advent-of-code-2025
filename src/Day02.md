@@ -45,8 +45,7 @@ and then duplicate them (ie. 98 -> 9898).
 **`invalidIdsByNumLength`** does the magic. Given a length (ie. 4) gets all possible numbers with half that length (ie. 2)
   and generates invalidIds by duplicating them
 <br><br>
-and VOILA we got ourselves a part1 done.
-
+and VOILA we got ourselves part1 done.
 
 ```haskell
 part1 :: String -> Int
@@ -69,7 +68,17 @@ part1 = T.pack
           -- |List of invalidIds for this numLength, we generate the first half and then duplicate it
          map (read @Int) . map (\a -> a <> a) . getNDigits  . (`div` 2)
       )
+```
 
+Oh boy part 2 here we go, this time around an invalidId
+is any number that has one number repeated 2 or more times.
+
+> **Invalid Ids**
+>
+> - 111 (1 repeated 3 times)
+> - 10101010 (10 repeated 5 times)
+
+```haskell
 part2 :: String -> Int
 part2 = T.pack 
       >>> parse 

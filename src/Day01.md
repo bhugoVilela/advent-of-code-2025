@@ -4,6 +4,10 @@
 For today's problem we have a list of left/right rotations to open a lock 
 and need to count the number of times the dial rests at 0 after each rotation
 
+```haskell
+
+```
+
 First, a few ceremonies...
 
 ```haskell
