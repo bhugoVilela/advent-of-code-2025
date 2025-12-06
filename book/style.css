@@ -1,7 +1,23 @@
 :root {
+  --text: black;
+  --bg: white;
+  --text-blend: #666;
+  --text-blend-2:rgb(182, 182, 182);
+  --syntax-data-type: #6161c1;
+  --syntax-comment: var(--text-blend-2);
+  --syntax-comment: var(--text-blend-2);
+  --syntax-value: #b85c00;
+  --syntax-keyword: currentColor;
 }
+
 @media (prefers-color-scheme: dark) {
   :root {
+    --text: white;
+    --bg: #18191B;
+    --text-blend: rgb(200, 200, 200);
+    --text-blend-2: rgb(150, 150, 150);
+    --syntax-value: orange;
+    --syntax-data-type: #8888C7;
   }
 }
 
@@ -10,13 +26,14 @@ html {
 }
 
 #TOC {
-  &:hover {
-    color: black;
-  }
-  color: rgb(182, 182, 182);
   align-items: center;
   border-block: 1px solid currentColor;
   margin-bottom: 2rem;
+
+  &:hover {
+    color: var(--text);
+  }
+  color: var(--text-blend-2);
 
   > span {
     font-size: 1.2rem;
@@ -30,7 +47,7 @@ html {
     color: currentColor;
     text-decoration: none;
     &:hover {
-      background-color: rgb(220, 220, 220);
+      background-color: var(--text-blend-2);
     }
   }
 }
@@ -42,6 +59,9 @@ body {
   margin-left: auto;
   margin-right: auto;
   max-width: 1400px;
+
+  color: var(--text);
+  background-color: var(--bg);
 }
 
 header {
@@ -64,7 +84,7 @@ header {
 
   .header-meta {
     font-size: 0.95rem;
-    color: #666;
+    color: var(--text-blend);
     line-height: 1.6;
   }
 
@@ -75,22 +95,6 @@ header {
   .header-date {
     font-style: italic;
     opacity: 0.8;
-  }
-
-  .header-link {
-    margin-top: 0.5rem;
-  }
-
-  .header-link a {
-    color: #007700;
-    text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: all 0.2s ease;
-  }
-
-  .header-link a:hover {
-    color: #005500;
-    border-bottom-color: #00cc00;
   }
 }
 
@@ -109,6 +113,31 @@ pre, code {
 
 code {
   white-space: nowrap;
+}
+
+/* semantic highlighting */
+code.haskell {
+  /* DataTypes */
+  .dt {
+    color: var(--syntax-data-type);
+  }
+  /* Comment */
+  .co {
+    color: var(--syntax-comment);
+  }
+  /* Value */
+  .dv {
+    color: var(--syntax-value);
+  }
+  /* Char Literal */
+  .ch {
+    color: var(--syntax-value);
+  }
+  /* Char Literal */
+  .kw {
+    color: var(--syntax-keyword);
+    font-weight: bold;
+  }
 }
 
 .row {

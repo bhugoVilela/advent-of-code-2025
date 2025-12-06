@@ -60,13 +60,6 @@
             "italic": true,
             "underline": false
         },
-        "DataType": {
-            "text-color": "#8888C7",
-            "background-color": null,
-            "bold": false,
-            "italic": false,
-            "underline": false
-        },
         "Comment": {
             "text-color": null,
             "background-color": null,
