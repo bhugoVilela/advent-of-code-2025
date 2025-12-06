@@ -69,14 +69,49 @@ part1 = T.pack
          map (read @Int) . map (\a -> a <> a) . getNDigits  . (`div` 2)
       )
 ```
+## Part 2
 
-Oh boy part 2 here we go, this time around an invalidId
+Oh boy part 2 here we go, this time around an invalid ID
 is any number that has one number repeated 2 or more times.
 
-> **Invalid Ids**
+> **Invalid Ids** <br>
 >
-> - 111 (1 repeated 3 times)
-> - 10101010 (10 repeated 5 times)
+> - `111 (1 repeated 3 times)`
+> - `10101010 (10 repeated 5 times)`
+> - `125125 (125 repeated 3 times)`
+
+```haskell
+
+```
+My approach to solve it is based on the one above, we still go through each
+number length (ie. for range (100-9999) we go through lengths 3 and 4).
+this time, for each length we need to find.
+
+So we generate `invalidIdsByNumLength` an infinite list where the index
+corresponds to the length of the numbers and the value is a list of all invalidIds with that length.
+
+To calculate the invalid ids for a single length we need to find all divisors of that length.
+
+So for say length 6 we have divisors 1, 2 and 3. then we just need to generate all invalidIds
+that are repetitions of those divisors.
+
+> Length 6
+>
+> - **divisor 1** - `XXXXXX`
+> - **divisor 2** - `XYXYXY`
+> - **divisor 3** - `XYZXYZ`
+
+This is what `getInvalidIds` does, for a length, finds the divisors and for each divisor generate
+all possible numbers of that length and then replicate those numbers `(length/divisor)` times. 
+
+The rest of the functions are just helpers to achieve this.
+
+`numberByLength` is an infinite array where the index is the length and the values are
+  all numbers of that length
+
+`numLength` just tells you the length of a number
+
+`getNDigits` returns all possible numbers of a given length.
 
 ```haskell
 part2 :: String -> Int
@@ -99,7 +134,10 @@ part2 = T.pack
                   prefixRepeats prefixLen = numLen `quot` prefixLen 
                   invalidIds = prefixLengths 
                     -- |generate all invalidIds by repeating the prefixes as needed
-                    & map (\prefixLen -> map (read @Int . concat . replicate (prefixRepeats prefixLen)) $ getNDigits prefixLen)
+                    & map (\prefixLen -> map (read @Int 
+                            . concat 
+                            . replicate (prefixRepeats prefixLen)) 
+                        $ getNDigits prefixLen)
                in sort . nub . concat $ invalidIds
 
     numbersByLength :: [[Int]]
