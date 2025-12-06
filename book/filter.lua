@@ -14,6 +14,13 @@ function is_header(block)
   return block.t == "Header"
 end
 
+function inspect(t) 
+  print('inspecting...')
+  for key, value in pairs(t) do
+    print("-", key, value)
+  end
+end
+
 function Pandoc(doc)
   local new_blocks = {}
   local i = 1
@@ -24,11 +31,15 @@ function Pandoc(doc)
     --collect consecutive non code-blocks
     while i <= #doc.blocks 
       and not is_haskell(doc.blocks[i])
-      and not is_header(doc.blocks[i])
+      and (not is_header(doc.blocks[i]) or doc.blocks[i].level > 2)
       do
       table.insert(non_code, doc.blocks[i])
       i = i + 1
     end
+
+    -- if doc.blocks[i].t == 'Header' then
+    --   inspect(doc.blocks[i])
+    -- end
 
     if #non_code ~= 0 then
       local code_blocks = {}
@@ -78,3 +89,4 @@ function Pandoc(doc)
 
   return pandoc.Pandoc(new_blocks, doc.meta)
 end
+

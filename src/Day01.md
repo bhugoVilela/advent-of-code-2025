@@ -1,8 +1,10 @@
 # Day 1
 
 ## Part 1
-For today's problem we have a list of left/right rotations to open a lock 
-and need to count the number of times the dial rests at 0 after each rotation
+
+Today's puzzle involves a combination lock with a rotating dial. We're given a series of left (L) and right (R) rotations, and we need to count how many times the dial lands exactly on position 0 after completing each rotation.
+
+The dial has 100 positions (0-99) and starts at position 50.
 
 ```haskell
 
@@ -15,8 +17,11 @@ First, a few ceremonies...
 module Day01 where
 ```
 
-I like to start with establishing a model and parsing the input.<br/><br/>
-A List of Integers is a good way to model rotations, negative ints being left rotations.
+### Parsing the Input
+
+I like to start by establishing a model and parsing the input.
+
+A `List` of `Integer`s is a natural way to model rotations. We'll use **positive integers** for right rotations and **negative integers** for left rotations. This makes the math simpler later—we can just add the rotation value to our current position.
 
 ```haskell
 parse :: String -> [Int]
@@ -29,24 +34,27 @@ parse = map parseLine . lines
 
 ```
 
-And to solve, we want to fold over the list of rotations keeping track of `(count, currentRotation)`
-where `count` is the number of times we land at 0
-<br/> <br/>
-This is where the magic happens, we add the rotation we're folding into the `currentRotation`
-and then use modulo to check if the `newRotation` is at zero
+### Solving Part 1
+
+To solve this, we'll fold over the list of rotations while maintaining a tuple of `(count, currentRotation)`:
+
+- `count`: the number of times we've landed exactly on 0
+- `currentRotation`: our current position on the dial
+
+The key insight: after each rotation, we check if our new position is divisible by 100 by using modulo (meaning we're at position 0).
 
 ```haskell
 solvePart1 :: [Int] -> Int
 solvePart1 = fst . foldl' rotate (0, 50)
   where
   rotate :: (Int, Int) -> Int -> (Int, Int)
-  rotate (count, currentRotation) rotation = 
-    let newRotation = currentRotation  + rotation
+  rotate (count, currentRotation) rotation =
+    let newRotation = currentRotation + rotation
         isZero = newRotation `mod` 100 == 0
      in (count + if isZero then 1 else 0, newRotation)
 ```
 
-All that's left is to define the function that solves after parsing.
+All that's left is to compose parsing with solving:
 
 ```haskell
 part1 :: String -> Int
@@ -55,39 +63,52 @@ part1 = solvePart1 . parse
 
 ## Part 2
 
-Part2 raises things up a notch, now we want to track the number of times the
-indicator goes through 0 (counting mid rotations as well)
+Part 2 increases the difficulty: now we need to track how many times the indicator **passes through** position 0, including positions crossed during a rotation (not just where it lands).
 
-The base algorithm is the same, a fold over the list, the difference is in how we count the clicks
+For example, if we're at position 80 and rotate right by 30, we pass through position 0 once during that rotation (80 → 90 → 100/0 → 10).
+
+### The Algorithm
+
+The base algorithm remains a fold over the rotation list, but now we need a more sophisticated way to count zero crossings:
 
 ```haskell
 solvePart2 :: [Int] -> Int
 solvePart2 rotations = fst $ foldl' go (0, 50) rotations
   where
   go :: (Int, Int) -> Int -> (Int, Int)
-  go (count, currentRotation) rotation = 
-    let newRotation = currentRotation  + rotation
+  go (count, currentRotation) rotation =
+    let newRotation = currentRotation + rotation
         clicks = numberOfClicks currentRotation rotation
      in (count + clicks, newRotation)
 ```
 
-We want to count how many times the indicator went through zero when starting at `pos`
-and rotating `rotation`.<br/>
-We divide the rotation by 100 to get the number of rotations performed 
-+ the remainder which may guide us through 0 once more
+### Counting Zero Crossings
+
+The `numberOfClicks` function calculates how many times we pass through zero during a single rotation.
+
+The logic breaks down as follows:
+
+1. **Normalize the current position** to be in range [0, 99]
+2. **Calculate complete rotations**: Dividing the rotation amount by 100 gives us how many full loops around the dial we make (`totalRotations`)
+3. **Check the remainder**: After the complete rotations, does the remainder push us through 0?
+   - **Right rotation**: We pass through 0 if `currentPos + remainder >= 100`
+   - **Left rotation**: We pass through 0 if we're not already at 0 and `currentPos - remainder <= 0`
 
 ```haskell
 numberOfClicks :: Int -> Int -> Int
-numberOfClicks pos rotation = 
+numberOfClicks pos rotation =
   let actualPos = normalizeRotation pos
       (totalRotations, remainder) = quotRem (abs rotation) 100
-      remainderClicks = if rotation > 0 
+      remainderClicks = if rotation > 0
         then actualPos + remainder >= 100
         else actualPos /= 0 && actualPos - remainder <= 0
   in totalRotations + if remainderClicks then 1 else 0
 ```
 
-one edge case here as modulo doesn't wrap around negative numbers as one might expect
+### Handling Negative Positions
+
+One edge case: Haskell's `mod` operator doesn't wrap negative numbers the way we need for a circular dial. We need a custom normalization function:
+This ensures that `-10` becomes `90`, `-110` becomes `90`, etc.
 
 ```haskell
 normalizeRotation :: Int -> Int
@@ -96,10 +117,11 @@ normalizeRotation n
   | otherwise = (100 - (abs n) `mod` 100) `mod` 100
 ```
 
-and TA-DA!
+### Final Solution
+
+And TA-DA!
 
 ```haskell
 part2 :: String -> Int
 part2 = solvePart2 . parse
-````
-
+```
