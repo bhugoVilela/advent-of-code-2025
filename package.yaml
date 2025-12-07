@@ -8,7 +8,6 @@ copyright:           "2025 Author name here"
 
 extra-source-files:
 - README.md
-- CHANGELOG.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -30,6 +29,7 @@ dependencies:
 - optparse-applicative
 - parallel
 - pqueue
+- deepseq
 
 ghc-options:
 - -Wall
@@ -47,13 +47,26 @@ library:
   source-dirs: src
 
 executables:
-  aoc-twenty-five-exe:
+  aoc:
     main:                Main.hs
+    other-modules:       []
     source-dirs:         app
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    dependencies:
+    - aoc-twenty-five
+
+  aoc-bench:
+    main:                Bench.hs
+    other-modules:       []
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -main-is Bench
     dependencies:
     - aoc-twenty-five
 

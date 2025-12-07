@@ -4,13 +4,17 @@
 {-# LANGUAGE BangPatterns #-}
 
 module Day07 where
+import Control.Arrow ((>>>))
 import Data.Function ((&), on)
 import Data.List (find, sortBy, sort, uncons)
+import System.IO (readFile')
 import Data.HashMap.Lazy (HashMap, (!?))
 import qualified Data.HashMap.Lazy as Map
+import Debug.Trace (traceShowId, traceShow, trace)
 import qualified Data.HashSet as Set
 import Data.HashSet (HashSet)
 import Control.Monad (guard)
+import Data.Maybe (fromMaybe)
 
 data Instructions = Instructions {
   _start :: (Int, Int), -- where the beam starts
@@ -61,7 +65,7 @@ solvePart2 (Instructions start tachyons) = snd $ go mempty start tachyons
                                newCache = Map.insert (x, newY) (nl + nr) $
                                  Map.union leftCache rightCache
                            in (newCache, nl + nr)
-            Nothing -> (cache, 1)
+            Nothing -> (Map.empty, 1)
 
 parse :: String -> Instructions
 parse str = let chars :: [(Char, (Int, Int))]

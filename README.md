@@ -39,8 +39,8 @@ Benchmarks are measured using criterion on an Apple M1 Pro
 
 ```bash
 # Run a single day/part
-stack run -- --day 1 --part 1
+stack run aoc -- --day 1 --part 1
 
-# Execute the benchmarks and output to html
-stack run -- --output benchmarks.html
+# Executes criterion benchmarks and output to html
+stack run aoc-bench -- --output benchmarks.html
 ```
