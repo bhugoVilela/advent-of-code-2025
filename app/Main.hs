@@ -17,6 +17,8 @@ import Day02
 import Day03
 import Day04
 import Day05
+import Day06
+import Day07
 
 data Args = Run { _day :: Int , _part :: Int }
           | Benchmark { _csvFile :: Maybe String, _output :: Maybe String }
@@ -41,6 +43,8 @@ main = do
                   , (Day03.part1, Day03.part2)
                   , (Day04.part1, Day04.part2)
                   , (Day05.part1, Day05.part2)
+                  , (Day06.part1, Day06.part2)
+                  , (Day07.part1, Day07.part2)
                   ]
   args <- execParser opts
 

@@ -24,10 +24,12 @@ dependencies:
 - text == 2.1.2
 - gloss
 - unordered-containers
+- containers
 - linear
 - criterion
 - optparse-applicative
 - parallel
+- pqueue
 
 ghc-options:
 - -Wall
