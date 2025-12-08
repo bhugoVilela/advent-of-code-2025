@@ -108,6 +108,11 @@
     <li><a href="#part-1-2" id="toc-part-1-2">Part 1</a></li>
     <li><a href="#part-2-2" id="toc-part-2-2">Part 2</a></li>
     </ul></li>
+    <li><a href="#day-8" id="toc-day-8">Day 8</a>
+    <ul>
+    <li><a href="#part-1-3" id="toc-part-1-3">Part 1</a></li>
+    <li><a href="#part-2-3" id="toc-part-2-3">Part 2</a></li>
+    </ul></li>
     </ul>
   </nav>
   
@@ -532,6 +537,285 @@
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>mergeDigits xs <span class="ot">=</span> <span class="fu">zip</span> [<span class="dv">0</span><span class="op">..</span>] (<span class="fu">reverse</span> xs) </span>
 <span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>          <span class="op">&amp;</span> foldMap&#39; (\(ix, d) <span class="ot">-&gt;</span> <span class="dt">Sum</span> (d <span class="op">*</span> <span class="dv">10</span> <span class="op">^</span> ix))</span>
 <span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>          <span class="op">&amp;</span> getSum</span></code></pre></div>
+  </div>
+  </div>
+  <h1 id="day-8">Day 8</h1>
+  <h2 id="part-1-3">Part 1</h2>
+  <div class="row">
+  <div class="lhs">
+  <p>Today we get a list of electrical junctions in 3D space</p>
+  <div class="sourceCode" id="cb24"><pre
+  class="sourceCode md"><code class="sourceCode markdown"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>162,817,812</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>57,618,57</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>906,360,560</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+  <p>We’re asked to pick the two closest ones and add them to a circuit,
+  which may result in either:</p>
+  <ul>
+  <li>A new circuit with just the two (if none are in a circuit)</li>
+  <li>Adding one of them to the other’s circuit (if the other is already
+  in a circuit)</li>
+  <li>Merging two circuits together.</li>
+  </ul>
+  <p>We need to do this 1000 times and then multiply the length of the 3
+  most populated circuits.</p>
+  <p>If the operations above remind you of a DisjointSet then you’re on
+  the right track. Indeed I suspect using a DistjoinSet would result in
+  a more efficient solution.</p>
+  <p>However, today’s challenge is the reason I learned about disjoint
+  sets and only after I had already a solution.</p>
+  <p>So today we’ll look at my naive solution.</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb25"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TemplateHaskell #-}</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# OPTIONS_GHC -Wno-name-shadowing #-}</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE BangPatterns #-}</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day08</span> <span class="kw">where</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Linear.V3</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Function</span> (on)</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List.Split</span> (splitOn)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">System.IO</span> (readFile&#39;)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (sortBy)</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.HashMap.Strict</span> (<span class="dt">HashMap</span>, (!?) )</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.HashMap.Strict</span> <span class="kw">as</span> <span class="dt">Map</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Lens</span></span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Arrow</span> ((&gt;&gt;&gt;))</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.State.Lazy</span> (<span class="dt">State</span>, evalState)</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad</span> (forM_)</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>As usual we start with a model. We’ll use Ints to identify circuits
+  and 3-dimensional vectors for the junctions</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb26"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">CircuitId</span> <span class="ot">=</span> <span class="dt">Int</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Junction</span> <span class="ot">=</span> (<span class="dt">V3</span> <span class="dt">Int</span>)</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>We split the input into lines and parse a junction for each
+  line</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb27"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">Junction</span>]</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> <span class="fu">map</span> parseJunction <span class="op">.</span> <span class="fu">lines</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  parseJunction ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Junction</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  parseJunction line <span class="ot">=</span> <span class="kw">let</span> [x, y, z] <span class="ot">=</span> splitOn <span class="st">&quot;,&quot;</span> line</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">in</span> <span class="dt">V3</span> (<span class="fu">read</span> x) (<span class="fu">read</span> y) (<span class="fu">read</span> z)</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>A simple euclidean distance function. We can do without
+  <code>sqrt</code> because the relative distances remain the same.</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb28"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ot">distanceTo ::</span> <span class="dt">Junction</span> <span class="ot">-&gt;</span> <span class="dt">Junction</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>distanceTo (<span class="dt">V3</span> x1 y1 z1) (<span class="dt">V3</span> x2 y2 z2) <span class="ot">=</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>         (<span class="fu">fromIntegral</span> (x2 <span class="op">-</span> x1)) <span class="op">**</span> <span class="fl">2.0</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>       <span class="op">+</span> (<span class="fu">fromIntegral</span> (y2 <span class="op">-</span> y1)) <span class="op">**</span> <span class="fl">2.0</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>       <span class="op">+</span> (<span class="fu">fromIntegral</span> (z2 <span class="op">-</span> z1)) <span class="op">**</span> <span class="fl">2.0</span></span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>And finally, <code>distances</code> gets us the sorted list of the
+  nearest junctions. we just find all pairs of junctions and sort them
+  with <code>distanceTo</code></p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb29"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ot">distances ::</span> [<span class="dt">Junction</span>] <span class="ot">-&gt;</span> [(<span class="dt">Junction</span>, <span class="dt">Junction</span>)]</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>distances vecs <span class="ot">=</span> [ (v1, v2)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>                 <span class="op">|</span> (ix, v1) <span class="ot">&lt;-</span> <span class="fu">zip</span> [<span class="dv">0</span><span class="op">..</span>] vecs</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>                 , v2 <span class="ot">&lt;-</span> <span class="fu">drop</span> (ix <span class="op">+</span> <span class="dv">1</span>) vecs</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>                 ] <span class="op">&amp;</span> sortBy (<span class="fu">compare</span> <span class="ot">`on`</span> <span class="fu">uncurry</span> distanceTo)</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>Let’s expand our model:</p>
+  <p><code>ProblemState</code> keeps track of a few things,</p>
+  <ul>
+  <li><strong><code>nextCircuitId</code></strong> - we’ll need this to
+  know what id to use when we create a new circuit</li>
+  <li><strong><code>junctions</code></strong> - maps a junction to a
+  circuit (allows to ask the circuit of a junction efficiently)</li>
+  <li><strong><code>circuits</code></strong> - maps a circuit to a list
+  of junction (allows us to get all junctions in a circuit
+  efficiently)</li>
+  </ul>
+  <p>this should be enough to perform the algorithm.</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb30"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">ProblemState</span> <span class="ot">=</span> <span class="dt">ProblemState</span> {</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  _nextCircuitId ::</span> <span class="dt">CircuitId</span>,</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="ot">  _junctions ::</span> <span class="dt">HashMap</span> <span class="dt">Junction</span> <span class="dt">CircuitId</span>,</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  _circuits ::</span> <span class="dt">HashMap</span> <span class="dt">CircuitId</span> [<span class="dt">Junction</span>]</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="ot">emptyState ::</span> <span class="dt">ProblemState</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>emptyState <span class="ot">=</span> <span class="dt">ProblemState</span> <span class="dv">0</span> Map.empty Map.empty</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>Today we’re using the State monad + the lens library to help
+  keeping our solution readable.</p>
+  <p>If you’re not proficient with lenses I highly recommend <a
+  href="https://leanpub.com/optics-by-example/">This Book</a>.</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb31"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>makeLenses <span class="dt">&#39;ProblemState</span></span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>We’ll be using the State Monad under the name Solver to model our
+  computations.</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb32"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Solver</span> a <span class="ot">=</span> <span class="dt">State</span> <span class="dt">ProblemState</span> a</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>Let’s start with a few utility functions</p>
+  <p>To add a junction to a circuit we need to update both the
+  <code>junctions</code> and <code>circuits</code> data structures</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb33"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ot">addJunctionToCircuit ::</span> (<span class="dt">V3</span> <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">CircuitId</span> <span class="ot">-&gt;</span> <span class="dt">Solver</span> ()</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>addJunctionToCircuit junction circuitId <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    junctions <span class="op">%=</span> Map.insert junction circuitId</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    circuits <span class="op">%=</span> Map.alter (insert junction) circuitId</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> ()</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    insert ::</span> <span class="dt">V3</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> [<span class="dt">V3</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> [<span class="dt">V3</span> <span class="dt">Int</span>]</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    insert junction <span class="dt">Nothing</span> <span class="ot">=</span> <span class="dt">Just</span> [junction]</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    insert junction (<span class="dt">Just</span> js) <span class="ot">=</span> <span class="dt">Just</span> (junction <span class="op">:</span> js)</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>Now we can do one full step of the algorithm, picking two junctions
+  and deciding how to for junctions <code>(a, b)</code> there are 5
+  possible cases that we need to handle</p>
+  <ol type="1">
+  <li>junction <code>a</code> is in circuit <code>ca</code> - we insert
+  junction <code>b</code> in circuit <code>ca</code></li>
+  <li>junction <code>b</code> is in circuit <code>cb</code> - same as
+  above with b</li>
+  <li>both junctions are in the same circuit - nothing changes</li>
+  <li>both junctions are in different circuits - we need to merge the
+  circuits</li>
+  </ol>
+  <ul>
+  <li><ol type="1">
+  <li>move all junctions in <code>ca</code> to <code>cb</code></li>
+  </ol></li>
+  <li><ol start="2" type="1">
+  <li>delete the <code>ca</code> circuit</li>
+  </ol></li>
+  </ul>
+  <ol start="5" type="1">
+  <li>neither <code>a</code> nor <code>b</code> are in a circuit -
+  create a new circuit with both</li>
+  </ol>
+  <ul>
+  <li>add both to a circuit with a new id</li>
+  <li>increase the <code>nextCircuitId</code> tracker</li>
+  </ul>
+  <p>Ooof, well, that’s the juice of today’s problems and the biggest
+  function today.</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb34"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ot">addJunctionPair ::</span> (<span class="dt">V3</span> <span class="dt">Int</span>, <span class="dt">V3</span> <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">Solver</span> ()</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>addJunctionPair (a, b) <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- find the circuits where a and b belong</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  mCa <span class="ot">&lt;-</span> uses junctions (<span class="op">!?</span> a)</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  mCb <span class="ot">&lt;-</span> uses junctions (<span class="op">!?</span> b)</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">case</span> (mCa, mCb) <span class="kw">of</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Just</span> ca, <span class="dt">Nothing</span>) <span class="ot">-&gt;</span> addJunctionToCircuit b ca</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Nothing</span>, <span class="dt">Just</span> cb) <span class="ot">-&gt;</span> addJunctionToCircuit a cb</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Just</span> ca, <span class="dt">Just</span> cb) <span class="op">|</span> ca <span class="op">==</span> cb <span class="ot">-&gt;</span> <span class="fu">return</span> ()</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Just</span> ca, <span class="dt">Just</span> cb) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>      junctionsInCa <span class="ot">&lt;-</span> uses circuits (<span class="op">Map.!</span> ca)</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>      forM_ junctionsInCa <span class="op">$</span> <span class="fu">flip</span> addJunctionToCircuit cb</span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>      circuits <span class="op">%=</span> Map.delete ca</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Nothing</span>, <span class="dt">Nothing</span>) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>      nextId <span class="ot">&lt;-</span> use nextCircuitId </span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>      nextCircuitId <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>      addJunctionToCircuit a nextId</span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>      addJunctionToCircuit b nextId</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>With all of that out of the way we’re ready to implement part1: 1.
+  We take the 1000 smallest pairs of distances 2. Go through each of
+  them with <code>forM_</code> to add them 3. calculate the score - this
+  long-ass one-liner takes the circuits and finds the 3 longest ones and
+  multiplies their lengths</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb35"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> solvePart1 <span class="op">.</span> parse</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart1 ::</span> [<span class="dt">V3</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>solvePart1 junctions <span class="ot">=</span> <span class="fu">flip</span> evalState emptyState <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> pairs <span class="ot">=</span> <span class="fu">take</span> <span class="dv">1000</span> <span class="op">$</span> distances junctions</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  forM_ pairs addJunctionPair</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  uses circuits (Map.toList <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> (<span class="fu">length</span> <span class="op">.</span> <span class="fu">snd</span>) <span class="op">&gt;&gt;&gt;</span> sortBy (<span class="fu">flip</span> <span class="fu">compare</span>) <span class="op">&gt;&gt;&gt;</span> <span class="fu">take</span> <span class="dv">3</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">product</span>)</span></code></pre></div>
+  </div>
+  </div>
+  <h2 id="part-2-3">Part 2</h2>
+  <div class="row">
+  <div class="lhs">
+  <p>For part 2 we’re asked to find the first pair of junctions that
+  when added will form 1 final circuit with all junctions, and multiply
+  their x coordinates.</p>
+  <p>Turns out we already have everything to solve part2 as well.</p>
+  <p><code>addUntilDone</code> - adds pairs until the condition is met
+  and returns the correct pair</p>
+  <p>We multiply their x coordinates and VOILA, day 8 is done.</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb36"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> solvePart2 <span class="op">.</span> parse</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart2 ::</span> [<span class="dt">V3</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>solvePart2 js <span class="ot">=</span> <span class="fu">flip</span> evalState emptyState <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> pairs <span class="ot">=</span> distances js</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>      addUntilDone [] <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;unreachable&quot;</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>      addUntilDone (n<span class="op">:</span>rest) <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>        addJunctionPair n</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>        junctionCount <span class="ot">&lt;-</span> uses junctions Map.size</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>        circuitCount <span class="ot">&lt;-</span> uses circuits Map.size</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> junctionCount <span class="op">==</span> <span class="fu">length</span> js <span class="op">&amp;&amp;</span> circuitCount <span class="op">==</span> <span class="dv">1</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>          <span class="kw">then</span> <span class="fu">return</span> n</span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>          <span class="kw">else</span> addUntilDone rest</span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>  (a, b) <span class="ot">&lt;-</span> addUntilDone pairs</span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> <span class="op">$</span> a<span class="op">^.</span>_x <span class="op">*</span> b<span class="op">^.</span>_x</span></code></pre></div>
   </div>
   </div>
 
