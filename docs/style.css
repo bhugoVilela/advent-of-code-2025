@@ -2,6 +2,7 @@
   --text: black;
   --bg: white;
   --text-blend: #666;
+  --bg-blend: rgb(200, 200, 200);
   --text-blend-2:rgb(182, 182, 182);
   --syntax-data-type: #6161c1;
   --syntax-comment: var(--text-blend-2);
@@ -67,7 +68,7 @@ html {
     color: currentColor;
     text-decoration: none;
     &:hover {
-      background-color: var(--text-blend-2);
+      background-color: var(--bg-blend);
     }
   }
 }
