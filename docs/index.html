@@ -279,261 +279,98 @@
   <h2 id="part-1-1">Part 1</h2>
   <div class="row">
   <div class="lhs">
-  <p>Today’s puzzle gives us a list of integer ranges (N-M) and asks us
-  to count “invalid IDs” within those ranges. An ID is invalid if it’s a
-  number where the first half equals the second half (e.g., 123123,
-  7777, 9898).</p>
-  <p>The key challenge: some ranges can be enormous (like
-  101-9999999999), so we can’t just check every number individually.</p>
-  <p>A few ceremonies:</p>
-  </div>
-  <div class="code">
+  <p>Today’s problem was easier than expected, for part 1 we get a list
+  of ranges. ie.</p>
   <div class="sourceCode" id="cb10"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day02</span> <span class="kw">where</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Text</span> <span class="kw">as</span> <span class="dt">T</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Arrow</span> ((&gt;&gt;&gt;))</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Function</span> ((&amp;))</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (sort, nub)</span></code></pre></div>
+  class="sourceCode md"><code class="sourceCode markdown"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(90 - 10000)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>(57 - 82345)</span></code></pre></div>
+  <p>We need to find all invalidIds between each range and sum them. An
+  id is invalid if it’s first and second half are equal (ie. 1010,
+  123123, 88).</p>
   </div>
-  </div>
-  <div class="row">
-  <section id="parsing-the-input-1" class="lhs">
-  <h3>Parsing the Input</h3>
-  <p>As always, we start with parsing. The input is a comma-separated
-  list of ranges (e.g., “101-999,5000-10000”).</p>
-  <p>A tuple is a natural fit for representing a range. I chose to parse
-  into <code>(Text, Text)</code> rather than <code>(Int, Int)</code>
-  because it makes it easier to work with the number lengths and
-  manipulate the digits later.</p>
-  </section>
   <div class="code">
   <div class="sourceCode" id="cb11"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Range</span> a <span class="ot">=</span> (a, a)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">T.Text</span> <span class="ot">-&gt;</span> [<span class="dt">Range</span> <span class="dt">T.Text</span>]</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> T.splitOn <span class="st">&quot;,&quot;</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> parseRange</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    parseRange str <span class="ot">=</span> <span class="kw">let</span> [a, b] <span class="ot">=</span> T.splitOn <span class="st">&quot;-&quot;</span> str</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>                      <span class="kw">in</span> (a, b)</span></code></pre></div>
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day02</span> <span class="kw">where</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Text</span> <span class="kw">as</span> <span class="dt">T</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Arrow</span> ((&gt;&gt;&gt;))</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Function</span> ((&amp;))</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List.Split</span> (chunksOf)</span></code></pre></div>
   </div>
   </div>
   <div class="row">
-  <section id="the-clever-trick-think-by-length-not-by-value"
-  class="lhs">
-  <h3>The Clever Trick: Think by Length, Not by Value</h3>
-  <p>Okay, time to think this through. Let’s say we have the range
-  <code>(101-9999999999)</code>. That’s billions of numbers to check
-  individually—way too slow!</p>
-  <p><strong>Key insight</strong>: Instead of iterating through every
-  number, we can group them by their <em>length</em> (number of
-  digits).</p>
-  <h4 id="why-this-works">Why This Works</h4>
-  <ol type="1">
-  <li><strong>Odd-length numbers can never be invalid</strong>: You
-  can’t split 3 digits evenly (e.g., 100-999 are all valid)</li>
-  <li><strong>For even-length numbers, we only need to check one
-  half</strong>:
-  <ul>
-  <li>For 4-digit numbers like <code>9898</code>, we just need the
-  2-digit number <code>98</code> and duplicate it</li>
-  <li>For 6-digit numbers like <code>123123</code>, we just need
-  <code>123</code> and duplicate it</li>
-  </ul></li>
-  </ol>
-  <p>This reduces the search space dramatically! Instead of checking
-  billions of numbers, we only generate the small set that could
-  possibly be invalid.</p>
-  <h4 id="the-algorithm-1">The Algorithm</h4>
-  <p><strong><code>invalidIdsInRange</code></strong> finds all invalid
-  IDs within a given range by:</p>
-  <ol type="1">
-  <li>Getting all even number-lengths within the range (e.g., for range
-  10-100000, we check lengths 2, 4, 6)</li>
-  <li>For each length, generating all possible invalid IDs of that
-  length</li>
-  <li>Filtering to keep only those within the actual range bounds</li>
-  </ol>
-  <p><strong><code>invalidIdsByNumLength</code></strong> is an infinite
-  list indexed by number length. At each index, it contains all invalid
-  IDs of that length. For example:</p>
-  <ul>
-  <li>Index 2: <code>[11, 22, 33, ..., 99]</code></li>
-  <li>Index 6: <code>[100100, 101101, ..., 999999]</code></li>
-  </ul>
-  <p>Given a certain length (say 4), instead of going through each
-  number and checking if it’s invalid, we generate all length 2 numbers
-  (ie. [10-99]) and duplicate them (ie. 10 -&gt; 1010) and this is how
-  we get all invalid ids for that length.</p>
-  <blockquote>
-  <p><strong>A word on infinite lists in haskell</strong></p>
-  <p>Infinite lists are extremely useful in haskell as a way of
-  memoisation for two reasons.</p>
-  <ol type="1">
-  <li>Because haskell is lazy it will only compute the values that we
-  ask from the list.</li>
-  <li>The second time we access a value from the list its already
-  precomputed and is passed by reference</li>
-  </ol>
-  <p>If <code>invalidIdsByNumLength</code> was a function it would
-  recompute every time it’s invoked. this way we’re able to reuse work
-  that’s already been done.</p>
-  </blockquote>
-  </section>
+  <div class="lhs">
+  <p>As always, we start with parsing the input, a list of
+  <code>(Int, Int)</code> seems fitting</p>
+  </div>
   <div class="code">
   <div class="sourceCode" id="cb12"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> T.pack</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>      <span class="op">&gt;&gt;&gt;</span> parse</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>      <span class="op">&gt;&gt;&gt;</span> <span class="fu">concatMap</span> invalidIdsInRange</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>      <span class="op">&gt;&gt;&gt;</span> <span class="fu">sum</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    invalidIdsInRange ::</span> <span class="dt">Range</span> <span class="dt">T.Text</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    invalidIdsInRange (a, b) <span class="ot">=</span> [T.length a <span class="op">..</span> T.length b]</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>                               <span class="op">&amp;</span> <span class="fu">filter</span> <span class="fu">even</span>                          <span class="co">-- Only even-length numbers (odd lengths can&#39;t be mirrored)</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>                               <span class="op">&amp;</span> <span class="fu">concatMap</span> (invalidIdsByNumLength <span class="op">!!</span>) <span class="co">-- Get all invalid IDs of these lengths</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>                               <span class="op">&amp;</span> <span class="fu">dropWhile</span> (<span class="op">&lt;</span> textRead <span class="op">@</span><span class="dt">Int</span> a)        <span class="co">-- Drop IDs below range start</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>                               <span class="op">&amp;</span> <span class="fu">takeWhile</span> (<span class="op">&lt;=</span> textRead <span class="op">@</span><span class="dt">Int</span> b)       <span class="co">-- Take only IDs within range end</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Infinite list of all possible invalid IDs by length</span></span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="ot">    invalidIdsByNumLength ::</span> [[<span class="dt">Int</span>]]</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    invalidIdsByNumLength <span class="ot">=</span> [<span class="dv">0</span><span class="op">..</span>]</span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>      <span class="op">&amp;</span> <span class="fu">map</span> (</span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>          <span class="co">-- For each length, generate the first half and duplicate it</span></span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>          <span class="co">-- e.g., for length 4: take all 2-digit numbers [10..99] and duplicate to [1010..9999]</span></span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>         <span class="fu">map</span> (<span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span>) <span class="op">.</span> <span class="fu">map</span> (\a <span class="ot">-&gt;</span> a <span class="op">&lt;&gt;</span> a) <span class="op">.</span> getNDigits <span class="op">.</span> (<span class="ot">`div`</span> <span class="dv">2</span>)</span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>      )</span></code></pre></div>
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Range</span> <span class="ot">=</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">Range</span>]</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> T.pack <span class="op">&gt;&gt;&gt;</span> T.splitOn <span class="st">&quot;,&quot;</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> parseRange</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span> </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    parseRange str <span class="ot">=</span> <span class="kw">let</span> [a, b] <span class="ot">=</span> T.splitOn <span class="st">&quot;-&quot;</span> str</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>                      <span class="kw">in</span> (<span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> <span class="op">$</span> T.unpack a, <span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> <span class="op">$</span> T.unpack b)</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>Put simply, for each range we get the invalid ids and sum them</p>
+  <p><code>invalidIdsInRange</code> - checks all numbers in a range,
+  filters only the invalid ones and sums them</p>
+  <p><code>isInvalid</code> - returns True if the number has even length
+  and its first and second half are equal</p>
+  <p>There really isn’t much to see here</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb13"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> parse <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> invalidIdsInRange <span class="op">&gt;&gt;&gt;</span> <span class="fu">sum</span> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    invalidIdsInRange ::</span> <span class="dt">Range</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    invalidIdsInRange (a, b) <span class="ot">=</span> <span class="fu">sum</span> <span class="op">$</span> <span class="fu">filter</span> isInvalid <span class="op">$</span> [a<span class="op">..</span>b]</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="ot">    isInvalid ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    isInvalid n <span class="ot">=</span> <span class="kw">let</span> str <span class="ot">=</span> <span class="fu">show</span> n</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>                      [<span class="fu">fst</span>, <span class="fu">snd</span>] <span class="ot">=</span> chunksOf (<span class="fu">length</span> str <span class="ot">`div`</span> <span class="dv">2</span>) str</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>                   <span class="kw">in</span> <span class="fu">even</span> (<span class="fu">length</span> str) <span class="op">&amp;&amp;</span> <span class="fu">fst</span> <span class="op">==</span> <span class="fu">snd</span></span></code></pre></div>
   </div>
   </div>
   <h2 id="part-2-1">Part 2</h2>
   <div class="row">
   <div class="lhs">
-  <p>Part 2 raises the stakes! Now an invalid ID is <strong>any number
-  that has a repeating pattern</strong> (a substring repeated 2 or more
-  times).</p>
-  <h3 id="examples-of-invalid-ids">Examples of Invalid IDs</h3>
+  <p>Part 2 bumps the difficulty slightly now an id is invalid if it
+  consists of a number repeated 2 or more times, ie.</p>
   <ul>
-  <li><code>111</code> (the digit “1” repeated 3 times)</li>
-  <li><code>10101010</code> (the substring “10” repeated 4 times)</li>
-  <li><code>125125</code> (the substring “125” repeated 2 times)</li>
-  <li><code>123123123</code> (the substring “123” repeated 3 times)</li>
+  <li>111 (1 repeated 3 times)</li>
+  <li>123123123 (123 repeated 3 times)</li>
+  <li>88 (8 repeated 2 times)</li>
   </ul>
-  <h3 id="the-approach-find-all-divisors">The Approach: Find All
-  Divisors</h3>
-  <p>My approach builds on Part 1: we still process numbers by their
-  length. But now, for each length, we need to find <strong>all possible
-  repeating patterns</strong>.</p>
-  <p>The key insight: a repeating pattern of length N can only exist in
-  a number of length L if N divides L evenly.</p>
-  <p>For a 6-digit number, the divisors are 1, 2, and 3:</p>
-  <table>
-  <thead>
-  <tr>
-  <th>Divisor</th>
-  <th>Pattern</th>
-  <th>Example</th>
-  </tr>
-  </thead>
-  <tbody>
-  <tr>
-  <td>1</td>
-  <td><code>XXXXXX</code></td>
-  <td><code>111111</code> (repeat “1” six times)</td>
-  </tr>
-  <tr>
-  <td>2</td>
-  <td><code>XYXYXY</code></td>
-  <td><code>121212</code> (repeat “12” three times)</td>
-  </tr>
-  <tr>
-  <td>3</td>
-  <td><code>XYZXYZ</code></td>
-  <td><code>123123</code> (repeat “123” twice)</td>
-  </tr>
-  </tbody>
-  </table>
-  <p>Note: Divisor 6 doesn’t count because we need <strong>at least 2
-  repetitions</strong>.</p>
-  <h3 id="the-algorithm-2">The Algorithm</h3>
-  <p><strong><code>invalidIdsByNumLength</code></strong> remains
-  virtually the same</p>
-  <p><strong><code>getInvalidIds</code></strong> does the heavy lifting
-  for a single length:</p>
-  <ol type="1">
-  <li>Find all valid divisors (prefix lengths that divide evenly)</li>
-  <li>For each divisor, generate all possible numbers of that
-  length</li>
-  <li>Repeat each number the appropriate number of times to fill the
-  full length</li>
-  <li>Combine, sort, and deduplicate all results to get a clean
-  <code>[[Int]]</code></li>
-  </ol>
-  <h3 id="helper-functions">Helper Functions</h3>
-  <ul>
-  <li><strong><code>getNDigits n</code></strong>: Returns all n-digit
-  numbers as strings (e.g.,
-  <code>getNDigits 2 = ["10", "11", ..., "99"]</code>)</li>
-  <li><strong><code>numLength</code></strong>: Returns the number of
-  digits in a number (e.g., <code>numLength 100 = 3</code>)</li>
-  <li><strong><code>textRead</code></strong>: Convenience function to
-  read from Text</li>
-  </ul>
-  <p>This approach efficiently generates exactly the invalid IDs we need
-  without checking every possible 6-digit number!</p>
+  <p><strong>Takeaway</strong>: we can check for divisors of the length
+  of the string, break the string into that many chunks and check if all
+  chunks are equal</p>
+  <p>The only change here is in <code>isInvalid</code> where we get the
+  divisors of length of number, and check if any of the divisors holds
+  the property above</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb13"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> T.pack</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>      <span class="op">&gt;&gt;&gt;</span> parse</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>      <span class="op">&gt;&gt;&gt;</span> <span class="fu">concatMap</span> invalidIdsInRange</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>      <span class="op">&gt;&gt;&gt;</span> <span class="fu">sum</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    invalidIdsInRange ::</span> <span class="dt">Range</span> <span class="dt">T.Text</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    invalidIdsInRange (a, b) <span class="ot">=</span> [T.length a <span class="op">..</span> T.length b]</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>                               <span class="op">&amp;</span> <span class="fu">concatMap</span> (invalidIdsByNumLength <span class="op">!!</span>)</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>                               <span class="op">&amp;</span> <span class="fu">dropWhile</span> (<span class="op">&lt;</span> textRead <span class="op">@</span><span class="dt">Int</span> a)</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>                               <span class="op">&amp;</span> <span class="fu">takeWhile</span> (<span class="op">&lt;=</span> textRead <span class="op">@</span><span class="dt">Int</span> b)</span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- List of invalid IDs by length of number</span></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="ot">    invalidIdsByNumLength ::</span> [[<span class="dt">Int</span>]]</span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    invalidIdsByNumLength <span class="ot">=</span> [<span class="dv">0</span><span class="op">..</span>] <span class="op">&amp;</span> <span class="fu">map</span> getInvalidIds</span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>      <span class="kw">where</span> getInvalidIds numLen <span class="ot">=</span></span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>              <span class="kw">let</span> prefixLengths <span class="ot">=</span> <span class="fu">filter</span> (\prefixLen <span class="ot">-&gt;</span> numLen <span class="ot">`rem`</span> prefixLen <span class="op">==</span> <span class="dv">0</span>) [<span class="dv">1</span><span class="op">..</span>(numLen <span class="op">-</span> <span class="dv">1</span>)]</span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>                  <span class="co">-- How many times we need to repeat a prefix to reach numLen</span></span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>                  prefixRepeats prefixLen <span class="ot">=</span> numLen <span class="ot">`quot`</span> prefixLen</span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>                  invalidIds <span class="ot">=</span> prefixLengths</span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>                    <span class="co">-- Generate all invalid IDs by repeating each possible prefix</span></span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>                    <span class="op">&amp;</span> <span class="fu">map</span> (\prefixLen <span class="ot">-&gt;</span> <span class="fu">map</span> (<span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span></span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>                            <span class="op">.</span> <span class="fu">concat</span></span>
-<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>                            <span class="op">.</span> <span class="fu">replicate</span> (prefixRepeats prefixLen))</span>
-<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>                        <span class="op">$</span> getNDigits prefixLen)</span>
-<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>               <span class="kw">in</span> <span class="fu">sort</span> <span class="op">.</span> nub <span class="op">.</span> <span class="fu">concat</span> <span class="op">$</span> invalidIds</span>
-<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a><span class="ot">    numbersByLength ::</span> [[<span class="dt">Int</span>]]</span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    numbersByLength <span class="ot">=</span> [<span class="dv">0</span><span class="op">..</span>] <span class="op">&amp;</span> <span class="fu">map</span> (<span class="fu">map</span> (<span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span>) <span class="op">.</span> getNDigits)</span>
-<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Get the number of digits in a number</span></span>
-<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a><span class="co">-- e.g. numLength 100 = 3</span></span>
-<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a><span class="ot">numLength ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>numLength <span class="ot">=</span> <span class="fu">length</span> <span class="op">.</span> <span class="fu">show</span></span>
-<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Returns all numbers with n digits in ascending order</span></span>
-<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a><span class="co">-- e.g. getNDigits 2 = [&quot;10&quot;, &quot;11&quot;, ..., &quot;99&quot;]</span></span>
-<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a><span class="ot">getNDigits ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> [[<span class="dt">Char</span>]]</span>
-<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>getNDigits numChars <span class="ot">=</span></span>
-<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> first <span class="ot">=</span> [<span class="ch">&#39;1&#39;</span><span class="op">..</span><span class="ch">&#39;9&#39;</span>]      <span class="co">-- First digit can&#39;t be 0</span></span>
-<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>      other <span class="ot">=</span> [<span class="ch">&#39;0&#39;</span><span class="op">..</span><span class="ch">&#39;9&#39;</span>]      <span class="co">-- Other digits can be anything</span></span>
-<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>      <span class="fu">all</span> <span class="ot">=</span> first <span class="op">:</span> <span class="fu">replicate</span> (numChars <span class="op">-</span> <span class="dv">1</span>) other</span>
-<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>   <span class="kw">in</span> <span class="fu">map</span> <span class="fu">reverse</span> <span class="op">$</span> foldl&#39; go ([<span class="st">&quot;&quot;</span>]) <span class="fu">all</span></span>
-<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>   <span class="kw">where</span></span>
-<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a><span class="ot">    go ::</span> [<span class="dt">String</span>] <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">String</span>]</span>
-<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>    go acc digits <span class="ot">=</span> <span class="fu">flip</span> <span class="fu">concatMap</span> acc <span class="op">$</span> \str <span class="ot">-&gt;</span> <span class="fu">map</span> (<span class="op">:</span>str) digits</span>
-<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a><span class="ot">textRead ::</span> (<span class="dt">Read</span> a) <span class="ot">=&gt;</span> <span class="dt">T.Text</span> <span class="ot">-&gt;</span> a</span>
-<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>textRead <span class="ot">=</span> <span class="fu">read</span> <span class="op">.</span> T.unpack</span></code></pre></div>
+  <div class="sourceCode" id="cb14"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> parse <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> invalidIdsInRange <span class="op">&gt;&gt;&gt;</span> <span class="fu">sum</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  invalidIdsInRange ::</span> <span class="dt">Range</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  invalidIdsInRange (a, b) <span class="ot">=</span> <span class="fu">sum</span> <span class="op">$</span> <span class="fu">filter</span> isInvalid <span class="op">$</span> [a<span class="op">..</span>b]</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  isInvalid ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  isInvalid n <span class="ot">=</span> <span class="kw">let</span> str <span class="ot">=</span> <span class="fu">show</span> <span class="op">$</span> n</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>                    divs <span class="ot">=</span> [<span class="dv">1</span><span class="op">..</span><span class="fu">length</span> str <span class="ot">`div`</span> <span class="dv">2</span>] <span class="op">&amp;</span> <span class="fu">filter</span> (\it <span class="ot">-&gt;</span> <span class="fu">length</span> str <span class="ot">`mod`</span> it <span class="op">==</span> <span class="dv">0</span>)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>                 <span class="kw">in</span> <span class="fu">any</span> (allEqual <span class="op">.</span> <span class="fu">flip</span> chunksOf str) divs</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="ot">allEqual ::</span> (<span class="dt">Eq</span> a) <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>allEqual (x<span class="op">:</span>xs) <span class="ot">=</span> <span class="fu">all</span> (<span class="op">==</span> x) xs</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>allEqual [] <span class="ot">=</span> <span class="dt">True</span></span></code></pre></div>
   </div>
   </div>
 
