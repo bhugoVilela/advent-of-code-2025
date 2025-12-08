@@ -131,6 +131,15 @@ pre, code {
   font-family: "Source Code Pro", monospace;
 }
 
+pre.sourceCode {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: 0px;
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar  {
+    display: initial;
+  }
+}
+
 code {
   white-space: nowrap;
 }
