@@ -29,6 +29,8 @@ dependencies:
 - pqueue
 - deepseq
 - split
+- lens
+- mtl
 
 ghc-options:
 - -Wall
