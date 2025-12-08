@@ -31,6 +31,7 @@ library
       Day05
       Day06
       Day07
+      Day08
   other-modules:
       Paths_aoc_twenty_five
   autogen-modules:
@@ -43,7 +44,9 @@ library
     , containers
     , deepseq
     , gloss
+    , lens
     , linear
+    , mtl
     , parallel
     , pqueue
     , split
@@ -62,7 +65,9 @@ executable aoc
     , containers
     , deepseq
     , gloss
+    , lens
     , linear
+    , mtl
     , optparse-applicative
     , parallel
     , pqueue
@@ -82,7 +87,9 @@ executable aoc-bench
     , containers
     , deepseq
     , gloss
+    , lens
     , linear
+    , mtl
     , parallel
     , pqueue
     , split
@@ -107,7 +114,9 @@ test-suite aoc-twenty-five-test
     , containers
     , deepseq
     , gloss
+    , lens
     , linear
+    , mtl
     , parallel
     , pqueue
     , split
