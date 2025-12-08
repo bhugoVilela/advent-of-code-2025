@@ -12,14 +12,14 @@
 ## Performance
 Benchmarks are measured using criterion on an Apple M1 Pro
 
-![Benchmarks](https://github.com/bhugoVilela/advent-of-code-2025/blob/main/benchmarks.png?raw=true)
+![Benchmarks](https://github.com/bhugoVilela/advent-of-code-2025/blob/main/bench.svg?raw=true)
 
 | Day                    | Part   | Time (parsing + solving) |
 | -----------------------| ------ | ------------------------ |
-| [Day 01](src/Day01.hs) | Part 1 | 3.519 ms                 |
+| [Day 01](src/Day01.hs) | Part 1 | 3.619 ms                 |
 | [Day 01](src/Day01.hs) | Part 2 | 3.544 ms                 |
-| [Day 02](src/Day02.hs) | Part 1 | 1.941 ms                 |
-| [Day 02](src/Day02.hs) | Part 2 | 1.942 ms                 |
+| [Day 02](src/Day02.hs) | Part 1 | 166.7 ms                 |
+| [Day 02](src/Day02.hs) | Part 2 | 388.5 ms                 |
 | [Day 03](src/Day03.hs) | Part 1 | 36.90 ms                 |
 | [Day 03](src/Day03.hs) | Part 2 | 24.73 ms                 |
 | [Day 04](src/Day04.hs) | Part 1 | 8.412 ms                 |

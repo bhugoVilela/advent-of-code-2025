@@ -4,12 +4,10 @@
 module Bench (main) where
 
 import System.IO (readFile')
-import Control.Monad (forM, forM_)
-import Criterion.Main
+import Test.Tasty.Bench
 import Text.Printf (printf)
 import GHC.IO (evaluate)
 import AllDays (allDays)
-import GHC.IO.Unsafe (unsafePerformIO)
 import Control.DeepSeq (force)
 
 main :: IO ()
@@ -23,7 +21,7 @@ main = do
   defaultMain $ [
     bgroup "2025" $ map (\(day, part, fn) ->
       env (readFile' (getInputFile day)) $ \input ->
-        bench (printf "Day%02d-Part%d" day part) $ nfIO (evaluate (fn input))) progs
+        bench (printf "Day%02d-Part%d" day part) $ nf fn input) progs
     ]
   where
     getInputFile :: Int -> String

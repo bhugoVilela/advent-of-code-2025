@@ -5,78 +5,41 @@ module Day02 where
 import qualified Data.Text as T
 import Control.Arrow ((>>>))
 import Data.Function ((&))
-import Data.List (sort, nub)
+import Data.List.Split (chunksOf)
 
-type Range a = (a, a)
+type Range = (Int, Int)
+
+parse :: String -> [Range]
+parse = T.pack >>> T.splitOn "," >>> map parseRange
+  where 
+    parseRange str = let [a, b] = T.splitOn "-" str
+                      in (read @Int $ T.unpack a, read @Int $ T.unpack b)
 
 part1 :: String -> Int
-part1 = T.pack 
-      >>> parse 
-      >>> concatMap invalidIdsInRange 
-      >>> sum 
+part1 = parse >>> map invalidIdsInRange >>> sum 
   where
-    invalidIdsInRange :: Range T.Text -> [Int]
-    invalidIdsInRange (a, b) = [T.length a .. T.length b]
-                               & filter even                          -- ^Only even length numbers, odd ones cannot be mirrored
-                               & concatMap (invalidIdsByNumLength !!) -- ^Get all invalidIds between those magnitudes
-                               & dropWhile (< textRead @Int a)
-                               & takeWhile (<= textRead @Int b) 
-
-    -- infinite list of all possible invalidIds by magnitude
-    invalidIdsByNumLength :: [[Int]]
-    invalidIdsByNumLength = [0..] 
-      & map (
-          -- |List of invalidIds for this numLength, we generate the first half and then duplicate it
-         map (read @Int) . map (\a -> a <> a) . getNDigits  . (`div` 2)
-      )
+    invalidIdsInRange :: Range -> Int
+    invalidIdsInRange (a, b) = sum $ filter isInvalid $ [a..b]
+    isInvalid :: Int -> Bool
+    isInvalid n = let str = show n
+                      [fst, snd] = chunksOf (length str `div` 2) str
+                   in even (length str) && fst == snd
 
 part2 :: String -> Int
-part2 = T.pack 
-      >>> parse 
-      >>> concatMap invalidIdsInRange
-      >>> sum 
+part2 = parse >>> map invalidIdsInRange >>> sum
   where
-    invalidIdsInRange :: Range T.Text -> [Int]
-    invalidIdsInRange (a, b) = [T.length a .. T.length b] 
-                               & concatMap (invalidIdsByNumLength !!)
-                               & dropWhile (< textRead @Int a)
-                               & takeWhile (<= textRead @Int b) 
-    -- | list of invalidIds by length of number
-    invalidIdsByNumLength :: [[Int]]
-    invalidIdsByNumLength = [0..] & map getInvalidIds
-      where getInvalidIds numLen =
-              let prefixLengths = filter (\prefixLen -> numLen `rem` prefixLen == 0) [1..(numLen - 1)]
-                  -- | how many times we need to repeat a prefix to get back at numLen
-                  prefixRepeats prefixLen = numLen `quot` prefixLen 
-                  invalidIds = prefixLengths 
-                    -- |generate all invalidIds by repeating the prefixes as needed
-                    & map (\prefixLen -> map (read @Int . concat . replicate (prefixRepeats prefixLen)) $ getNDigits prefixLen)
-               in sort . nub . concat $ invalidIds
+  invalidIdsInRange :: Range -> Int
+  invalidIdsInRange (a, b) = sum $ filter isInvalid $ [a..b]
+  isInvalid :: Int -> Bool
+  isInvalid n = let str = show $ n
+                    divs = [1..length str `div` 2] & filter (\it -> length str `mod` it == 0)
+                 in any (allEqual . flip chunksOf str) divs
 
-    numbersByMagnitude :: [[Int]]
-    numbersByMagnitude = [0..] & map (map (read @Int) . getNDigits)
+
+allEqual :: (Eq a) => [a] -> Bool
+allEqual (x:xs) = all (== x) xs
+allEqual [] = True
 
 -- | ie. magnitude 100 = 3
 numLength :: Int -> Int
 numLength = length . show
-
-parse :: T.Text -> [Range T.Text]
-parse = T.splitOn "," >>> map parseRange
-  where 
-    parseRange str = let [a, b] = T.splitOn "-" str
-                      in (a, b)
-
-
--- |Returns all Numbers with n digits in asc order
-getNDigits :: Int -> [[Char]]
-getNDigits numChars = 
-  let first = ['1'..'9']
-      other = ['0'..'9']
-      all = first : replicate (numChars - 1) other
-   in map reverse $ foldl' go ([""]) all
-   where
-    go :: [String] -> String -> [String]
-    go acc digits = flip concatMap acc $ \str -> map (:str) digits
-
-textRead :: (Read a) => T.Text -> a
-textRead = read . T.unpack 

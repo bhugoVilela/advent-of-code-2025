@@ -41,13 +41,12 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
-    , criterion
     , deepseq
     , gloss
     , linear
-    , optparse-applicative
     , parallel
     , pqueue
+    , split
     , text ==2.1.2
     , unordered-containers
   default-language: Haskell2010
@@ -61,13 +60,13 @@ executable aoc
       aoc-twenty-five
     , base >=4.7 && <5
     , containers
-    , criterion
     , deepseq
     , gloss
     , linear
     , optparse-applicative
     , parallel
     , pqueue
+    , split
     , text ==2.1.2
     , unordered-containers
   default-language: Haskell2010
@@ -81,13 +80,13 @@ executable aoc-bench
       aoc-twenty-five
     , base >=4.7 && <5
     , containers
-    , criterion
     , deepseq
     , gloss
     , linear
-    , optparse-applicative
     , parallel
     , pqueue
+    , split
+    , tasty-bench
     , text ==2.1.2
     , unordered-containers
   default-language: Haskell2010
@@ -106,13 +105,12 @@ test-suite aoc-twenty-five-test
       aoc-twenty-five
     , base >=4.7 && <5
     , containers
-    , criterion
     , deepseq
     , gloss
     , linear
-    , optparse-applicative
     , parallel
     , pqueue
+    , split
     , text ==2.1.2
     , unordered-containers
   default-language: Haskell2010
