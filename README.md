@@ -24,6 +24,6 @@ Benchmarks are measured using criterion on an Apple M1 Pro
 # Run a single day/part
 stack run aoc -- --day 1 --part 1
 
-# Executes criterion benchmarks and output to html
-stack run aoc-bench -- --output benchmarks.html
+# To execute tasty-bench benchmarks
+scripts/runBenchmarks dry
 ```
