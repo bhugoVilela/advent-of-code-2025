@@ -5,29 +5,24 @@ module Main (main) where
 
 import System.IO (readFile')
 import Options.Applicative
-import GHC.List ((!?))
 import Data.Maybe (fromMaybe)
-import Control.Monad (forM)
-import Criterion.Main
+import Control.Monad (forM_)
 import Text.Printf (printf)
 import GHC.IO (evaluate)
 
-import Day01
-import Day02
-import Day03
-import Day04
-import Day05
+import AllDays (allDays)
+import Data.List (singleton)
+import System.CPUTime (getCPUTime)
+import Control.DeepSeq (force)
 
-data Args = Run { _day :: Int , _part :: Int }
-          | Benchmark { _csvFile :: Maybe String, _output :: Maybe String }
-          deriving (Show)
-
+data Args = Run { _day :: Maybe Int , _part :: Maybe Int } deriving (Show)
 
 argsParser :: Parser Args
 argsParser =
-      (Run <$> option auto ( long "day" <> short 'd' <> help "Which day to run" ) <*> option auto ( long "part" <> short 'p' <> help "Which Part to run" ))
-     <|> (Benchmark <$> optional (strOption (long "csv" <> help "CSV file to write results"))
-                     <*> optional (strOption (long "output" <> help "HTML file to write results")))
+      (Run 
+        <$> optional (option auto ( long "day" <> short 'd' <> help "Which day to run" ))
+        <*> optional (option auto ( long "part" <> short 'p' <> help "Which Part to run" ))
+      )
 
 opts :: ParserInfo Args
 opts = info (argsParser <**> helper)
@@ -35,32 +30,22 @@ opts = info (argsParser <**> helper)
 
 main :: IO ()
 main = do
-  let solutions :: [(String -> Int, String -> Int)]
-      solutions = [ (Day01.part1, Day01.part2)
-                  , (Day02.part1, Day02.part2)
-                  , (Day03.part1, Day03.part2)
-                  , (Day04.part1, Day04.part2)
-                  , (Day05.part1, Day05.part2)
-                  ]
-  args <- execParser opts
+  Run mDay mPart <- execParser opts
+  let days  = fromMaybe [1..length allDays] $ singleton <$> mDay
+  let parts = fromMaybe [1,2] $ singleton <$> mPart
+  let progs = [(fn, d, p) | d <- days, p <- parts, let fn = allDays !! (d-1) !! (p-1)]
 
-  case args of
-    Run day part -> do
-      let mProg = fromMaybe (error "error: invalid day") 
-                  $ (if part == 1 then fst else snd) <$> (solutions !? (day - 1))
-      input <- readFile' $ getInputFile day
-      print $ mProg input
-    Benchmark csvFile output -> do
-      runs <- forM (zip [1..] solutions) $ \(day, (part1, part2)) -> do
-        input <- readFile' $ getInputFile day
-        return [
-          (printf "Day %02d Part 1" day :: String, input, part1),
-          (printf "Day %02d Part 2" day, input, part2)
-          ]
-      actualRuns <- evaluate $ concat runs
-      defaultMain $ [
-        bgroup "2025" $ map (\(name, input, action) -> bench name $ whnf action input) actualRuns
-        ]
+  forM_ progs $ \(prog, day, part) -> do
+    contents <- readFile' $ getInputFile day
+    t1 <- getCPUTime 
+    result <- evaluate $ force $ prog contents
+    t2 <- getCPUTime
+    let t :: Double
+        t = fromIntegral (t2-t1) * 1e-9
+    printf "input: %s\n" $ getInputFile day
+    printf "Day%02d - Part%d: %d\n" day part result
+    printf "Time: %.2fms\n" t
+    printf "---------------\n"
       
   where
     getInputFile :: Int -> String

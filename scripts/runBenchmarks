@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+if [ "$1" = "update" ]; then
+	shift
+	stack run aoc-bench -- --csv baseline.csv $@
+elif [ "$1" = "dry" ]; then
+	shift
+	stack run aoc-bench -- $@
+else
+	stack run aoc-bench -- --baseline baseline.csv $@
+fi
