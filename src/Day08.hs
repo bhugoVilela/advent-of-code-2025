@@ -29,7 +29,7 @@ parse = map parseJunction . lines
 
 distanceTo :: Junction -> Junction -> Double
 distanceTo (V3 x1 y1 z1) (V3 x2 y2 z2) =
-  sqrt $ (fromIntegral (x2 - x1)) ** 2.0
+         (fromIntegral (x2 - x1)) ** 2.0
        + (fromIntegral (y2 - y1)) ** 2.0
        + (fromIntegral (z2 - z1)) ** 2.0
 
