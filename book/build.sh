@@ -7,9 +7,9 @@ SCRIPTDIR=$(dirname "$0")
 set -e
 
 rm -rf out
-pandoc "$INDIR"/*.md \
+pandoc "$INDIR"/*.{md,lhs} \
     -o "$OUTDIR"/index.html \
-    -f markdown \
+    -f markdown+lhs \
     -t html \
     --toc=true \
     --toc-depth=2 \

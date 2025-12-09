@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap"
     rel="stylesheet">
-          <title>Day01</title>
+          <title>Day02</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -103,216 +103,31 @@
     <li><a href="#part-1" id="toc-part-1">Part 1</a></li>
     <li><a href="#part-2" id="toc-part-2">Part 2</a></li>
     </ul></li>
-    <li><a href="#day-2" id="toc-day-2">Day 2</a>
-    <ul>
-    <li><a href="#part-1-1" id="toc-part-1-1">Part 1</a></li>
-    <li><a href="#part-2-1" id="toc-part-2-1">Part 2</a></li>
-    </ul></li>
-    <li><a href="#day-3" id="toc-day-3">Day 3</a>
-    <ul>
-    <li><a href="#part-1-2" id="toc-part-1-2">Part 1</a></li>
-    <li><a href="#part-2-2" id="toc-part-2-2">Part 2</a></li>
-    </ul></li>
-    <li><a href="#day-8" id="toc-day-8">Day 8</a>
-    <ul>
-    <li><a href="#part-1-3" id="toc-part-1-3">Part 1</a></li>
-    <li><a href="#part-2-3" id="toc-part-2-3">Part 2</a></li>
-    </ul></li>
     </ul>
   </nav>
   
-  <h1 id="day-1">Day 1</h1>
-  <h2 id="part-1">Part 1</h2>
   <div class="row">
   <div class="lhs">
-  <p>Today’s puzzle involves a combination lock with a rotating dial.
-  We’re given a series of left (L) and right (R) rotations, and we need
-  to count how many times the dial lands exactly on position 0 after
-  completing each rotation.</p>
-  <p>The dial has 100 positions (0-99) and starts at position 50.</p>
-  </div>
-  <div class="code">
-  <div class="sourceCode" id="cb1"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
-  </div>
-  </div>
-  <div class="row">
-  <div class="lhs">
-  <p>First, a few ceremonies…</p>
-  </div>
-  <div class="code">
-  <div class="sourceCode" id="cb2"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day01</span> <span class="kw">where</span></span></code></pre></div>
-  </div>
-  </div>
-  <div class="row">
-  <section id="parsing-the-input" class="lhs">
-  <h3>Parsing the Input</h3>
-  <p>I like to start by establishing a model and parsing the input.</p>
-  <p>A <code>List</code> of <code>Integer</code>s is a natural way to
-  model rotations. We’ll use <strong>positive integers</strong> for
-  right rotations and <strong>negative integers</strong> for left
-  rotations. This makes the math simpler later—we can just add the
-  rotation value to our current position.</p>
-  </section>
-  <div class="code">
-  <div class="sourceCode" id="cb3"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> <span class="fu">map</span> parseLine <span class="op">.</span> <span class="fu">lines</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    parseLine ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    parseLine (<span class="ch">&#39;R&#39;</span><span class="op">:</span>rest) <span class="ot">=</span> <span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> rest</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    parseLine (<span class="ch">&#39;L&#39;</span><span class="op">:</span>rest) <span class="ot">=</span> <span class="fu">negate</span> <span class="op">$</span> <span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> rest</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    parseLine _ <span class="ot">=</span> <span class="fu">undefined</span></span></code></pre></div>
-  </div>
-  </div>
-  <div class="row">
-  <section id="solving-part-1" class="lhs">
-  <h3>Solving Part 1</h3>
-  <p>To solve this, we’ll fold over the list of rotations while
-  maintaining a tuple of <code>(count, currentRotation)</code>:</p>
-  <ul>
-  <li><code>count</code>: the number of times we’ve landed exactly on
-  0</li>
-  <li><code>currentRotation</code>: our current position on the
-  dial</li>
-  </ul>
-  <p>The key insight: after each rotation, we check if our new position
-  is divisible by 100 by using modulo (meaning we’re at position 0).</p>
-  </section>
-  <div class="code">
-  <div class="sourceCode" id="cb4"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart1 ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>solvePart1 <span class="ot">=</span> <span class="fu">fst</span> <span class="op">.</span> foldl&#39; rotate (<span class="dv">0</span>, <span class="dv">50</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  rotate ::</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  rotate (count, currentRotation) rotation <span class="ot">=</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> newRotation <span class="ot">=</span> currentRotation <span class="op">+</span> rotation</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        isZero <span class="ot">=</span> newRotation <span class="ot">`mod`</span> <span class="dv">100</span> <span class="op">==</span> <span class="dv">0</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> (count <span class="op">+</span> <span class="kw">if</span> isZero <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span>, newRotation)</span></code></pre></div>
-  </div>
-  </div>
-  <div class="row">
-  <div class="lhs">
-  <p>All that’s left is to compose parsing with solving:</p>
-  </div>
-  <div class="code">
-  <div class="sourceCode" id="cb5"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> solvePart1 <span class="op">.</span> parse</span></code></pre></div>
-  </div>
-  </div>
-  <h2 id="part-2">Part 2</h2>
-  <div class="row">
-  <div class="lhs">
-  <p>Part 2 increases the difficulty: now we need to track how many
-  times the indicator <strong>passes through</strong> position 0,
-  including positions crossed during a rotation (not just where it
-  lands).</p>
-  <p>For example, if we’re at position 80 and rotate right by 30, we
-  pass through position 0 once during that rotation (80 → 90 → 100/0 →
-  10).</p>
-  <h3 id="the-algorithm">The Algorithm</h3>
-  <p>The base algorithm remains a fold over the rotation list, but now
-  we need a more sophisticated way to count zero crossings:</p>
-  </div>
-  <div class="code">
-  <div class="sourceCode" id="cb6"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart2 ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>solvePart2 rotations <span class="ot">=</span> <span class="fu">fst</span> <span class="op">$</span> foldl&#39; go (<span class="dv">0</span>, <span class="dv">50</span>) rotations</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  go ::</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  go (count, currentRotation) rotation <span class="ot">=</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> newRotation <span class="ot">=</span> currentRotation <span class="op">+</span> rotation</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        clicks <span class="ot">=</span> numberOfClicks currentRotation rotation</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> (count <span class="op">+</span> clicks, newRotation)</span></code></pre></div>
-  </div>
-  </div>
-  <div class="row">
-  <section id="counting-zero-crossings" class="lhs">
-  <h3>Counting Zero Crossings</h3>
-  <p>The <code>numberOfClicks</code> function calculates how many times
-  we pass through zero during a single rotation.</p>
-  <p>The logic breaks down as follows:</p>
-  <ol type="1">
-  <li><strong>Normalize the current position</strong> to be in range [0,
-  99]</li>
-  <li><strong>Calculate complete rotations</strong>: Dividing the
-  rotation amount by 100 gives us how many full loops around the dial we
-  make (<code>totalRotations</code>)</li>
-  <li><strong>Check the remainder</strong>: After the complete
-  rotations, does the remainder push us through 0?
-  <ul>
-  <li><strong>Right rotation</strong>: We pass through 0 if
-  <code>currentPos + remainder &gt;= 100</code></li>
-  <li><strong>Left rotation</strong>: We pass through 0 if we’re not
-  already at 0 and <code>currentPos - remainder &lt;= 0</code></li>
-  </ul></li>
-  </ol>
-  </section>
-  <div class="code">
-  <div class="sourceCode" id="cb7"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">numberOfClicks ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>numberOfClicks pos rotation <span class="ot">=</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> actualPos <span class="ot">=</span> normalizeRotation pos</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>      (totalRotations, remainder) <span class="ot">=</span> <span class="fu">quotRem</span> (<span class="fu">abs</span> rotation) <span class="dv">100</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>      remainderClicks <span class="ot">=</span> <span class="kw">if</span> rotation <span class="op">&gt;</span> <span class="dv">0</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> actualPos <span class="op">+</span> remainder <span class="op">&gt;=</span> <span class="dv">100</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> actualPos <span class="op">/=</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> actualPos <span class="op">-</span> remainder <span class="op">&lt;=</span> <span class="dv">0</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">in</span> totalRotations <span class="op">+</span> <span class="kw">if</span> remainderClicks <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span></span></code></pre></div>
-  </div>
-  </div>
-  <div class="row">
-  <section id="handling-negative-positions" class="lhs">
-  <h3>Handling Negative Positions</h3>
-  <p>One edge case: Haskell’s <code>mod</code> operator doesn’t wrap
-  negative numbers the way we need for a circular dial. We need a custom
-  normalization function: This ensures that <code>-10</code> becomes
-  <code>90</code>, <code>-110</code> becomes <code>90</code>, etc.</p>
-  </section>
-  <div class="code">
-  <div class="sourceCode" id="cb8"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">normalizeRotation ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>normalizeRotation n</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> n <span class="op">&gt;=</span> <span class="dv">0</span>    <span class="ot">=</span> n <span class="ot">`mod`</span> <span class="dv">100</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> (<span class="dv">100</span> <span class="op">-</span> (<span class="fu">abs</span> n) <span class="ot">`mod`</span> <span class="dv">100</span>) <span class="ot">`mod`</span> <span class="dv">100</span></span></code></pre></div>
-  </div>
-  </div>
-  <div class="row">
-  <section id="final-solution" class="lhs">
-  <h3>Final Solution</h3>
-  <p>And TA-DA!</p>
-  </section>
-  <div class="code">
-  <div class="sourceCode" id="cb9"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> solvePart2 <span class="op">.</span> parse</span></code></pre></div>
-  </div>
-  </div>
-  <h1 id="day-2">Day 2</h1>
-  <h2 id="part-1-1">Part 1</h2>
-  <div class="row">
-  <div class="lhs">
+  <p># Day 2 ## Part 1</p>
   <p>Today’s problem was easier than expected, for part 1 we get a list
   of ranges. ie.</p>
-  <div class="sourceCode" id="cb10"><pre
-  class="sourceCode md"><code class="sourceCode markdown"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(90 - 10000)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>(57 - 82345)</span></code></pre></div>
+  <div class="sourceCode" id="cb1"><pre
+  class="sourceCode md"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(90 - 10000)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>(57 - 82345)</span></code></pre></div>
   <p>We need to find all invalidIds between each range and sum them. An
   id is invalid if it’s first and second half are equal (ie. 1010,
   123123, 88).</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb11"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day02</span> <span class="kw">where</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Text</span> <span class="kw">as</span> <span class="dt">T</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Arrow</span> ((&gt;&gt;&gt;))</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Function</span> ((&amp;))</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List.Split</span> (chunksOf)</span></code></pre></div>
+  <div class="sourceCode" id="cb2"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day02</span> <span class="kw">where</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Text</span> <span class="kw">as</span> <span class="dt">T</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Arrow</span> ((&gt;&gt;&gt;))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Function</span> ((&amp;))</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List.Split</span> (chunksOf)</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -321,14 +136,14 @@
   <code>(Int, Int)</code> seems fitting</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb12"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Range</span> <span class="ot">=</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">Range</span>]</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> T.pack <span class="op">&gt;&gt;&gt;</span> T.splitOn <span class="st">&quot;,&quot;</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> parseRange</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span> </span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    parseRange str <span class="ot">=</span> <span class="kw">let</span> [a, b] <span class="ot">=</span> T.splitOn <span class="st">&quot;-&quot;</span> str</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>                      <span class="kw">in</span> (<span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> <span class="op">$</span> T.unpack a, <span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> <span class="op">$</span> T.unpack b)</span></code></pre></div>
+  <div class="sourceCode" id="cb3"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Range</span> <span class="ot">=</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">Range</span>]</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> T.pack <span class="op">&gt;&gt;&gt;</span> T.splitOn <span class="st">&quot;,&quot;</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> parseRange</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span> </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    parseRange str <span class="ot">=</span> <span class="kw">let</span> [a, b] <span class="ot">=</span> T.splitOn <span class="st">&quot;-&quot;</span> str</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>                      <span class="kw">in</span> (<span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> <span class="op">$</span> T.unpack a, <span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> <span class="op">$</span> T.unpack b)</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -341,23 +156,22 @@
   <p>There really isn’t much to see here</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb13"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> parse <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> invalidIdsInRange <span class="op">&gt;&gt;&gt;</span> <span class="fu">sum</span> </span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    invalidIdsInRange ::</span> <span class="dt">Range</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    invalidIdsInRange (a, b) <span class="ot">=</span> <span class="fu">sum</span> <span class="op">$</span> <span class="fu">filter</span> isInvalid <span class="op">$</span> [a<span class="op">..</span>b]</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="ot">    isInvalid ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    isInvalid n <span class="ot">=</span> <span class="kw">let</span> str <span class="ot">=</span> <span class="fu">show</span> n</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>                      [<span class="fu">fst</span>, <span class="fu">snd</span>] <span class="ot">=</span> chunksOf (<span class="fu">length</span> str <span class="ot">`div`</span> <span class="dv">2</span>) str</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>                   <span class="kw">in</span> <span class="fu">even</span> (<span class="fu">length</span> str) <span class="op">&amp;&amp;</span> <span class="fu">fst</span> <span class="op">==</span> <span class="fu">snd</span></span></code></pre></div>
+  <div class="sourceCode" id="cb4"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> parse <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> invalidIdsInRange <span class="op">&gt;&gt;&gt;</span> <span class="fu">sum</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    invalidIdsInRange ::</span> <span class="dt">Range</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    invalidIdsInRange (a, b) <span class="ot">=</span> <span class="fu">sum</span> <span class="op">$</span> <span class="fu">filter</span> isInvalid <span class="op">$</span> [a<span class="op">..</span>b]</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ot">    isInvalid ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    isInvalid n <span class="ot">=</span> <span class="kw">let</span> str <span class="ot">=</span> <span class="fu">show</span> n</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                      [<span class="fu">fst</span>, <span class="fu">snd</span>] <span class="ot">=</span> chunksOf (<span class="fu">length</span> str <span class="ot">`div`</span> <span class="dv">2</span>) str</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                   <span class="kw">in</span> <span class="fu">even</span> (<span class="fu">length</span> str) <span class="op">&amp;&amp;</span> <span class="fu">fst</span> <span class="op">==</span> <span class="fu">snd</span></span></code></pre></div>
   </div>
   </div>
-  <h2 id="part-2-1">Part 2</h2>
   <div class="row">
   <div class="lhs">
-  <p>Part 2 bumps the difficulty slightly now an id is invalid if it
-  consists of a number repeated 2 or more times, ie.</p>
+  <p>## Part 2 Part 2 bumps the difficulty slightly now an id is invalid
+  if it consists of a number repeated 2 or more times, ie.</p>
   <ul>
   <li>111 (1 repeated 3 times)</li>
   <li>123123123 (123 repeated 3 times)</li>
@@ -371,52 +185,50 @@
   the property above</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb14"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> parse <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> invalidIdsInRange <span class="op">&gt;&gt;&gt;</span> <span class="fu">sum</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  invalidIdsInRange ::</span> <span class="dt">Range</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  invalidIdsInRange (a, b) <span class="ot">=</span> <span class="fu">sum</span> <span class="op">$</span> <span class="fu">filter</span> isInvalid <span class="op">$</span> [a<span class="op">..</span>b]</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  isInvalid ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  isInvalid n <span class="ot">=</span> <span class="kw">let</span> str <span class="ot">=</span> <span class="fu">show</span> <span class="op">$</span> n</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>                    divs <span class="ot">=</span> [<span class="dv">1</span><span class="op">..</span><span class="fu">length</span> str <span class="ot">`div`</span> <span class="dv">2</span>] <span class="op">&amp;</span> <span class="fu">filter</span> (\it <span class="ot">-&gt;</span> <span class="fu">length</span> str <span class="ot">`mod`</span> it <span class="op">==</span> <span class="dv">0</span>)</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>                 <span class="kw">in</span> <span class="fu">any</span> (allEqual <span class="op">.</span> <span class="fu">flip</span> chunksOf str) divs</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="ot">allEqual ::</span> (<span class="dt">Eq</span> a) <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>allEqual (x<span class="op">:</span>xs) <span class="ot">=</span> <span class="fu">all</span> (<span class="op">==</span> x) xs</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>allEqual [] <span class="ot">=</span> <span class="dt">True</span></span></code></pre></div>
+  <div class="sourceCode" id="cb5"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> parse <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> invalidIdsInRange <span class="op">&gt;&gt;&gt;</span> <span class="fu">sum</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  invalidIdsInRange ::</span> <span class="dt">Range</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  invalidIdsInRange (a, b) <span class="ot">=</span> <span class="fu">sum</span> <span class="op">$</span> <span class="fu">filter</span> isInvalid <span class="op">$</span> [a<span class="op">..</span>b]</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  isInvalid ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  isInvalid n <span class="ot">=</span> <span class="kw">let</span> str <span class="ot">=</span> <span class="fu">show</span> <span class="op">$</span> n</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                    divs <span class="ot">=</span> [<span class="dv">1</span><span class="op">..</span><span class="fu">length</span> str <span class="ot">`div`</span> <span class="dv">2</span>] <span class="op">&amp;</span> <span class="fu">filter</span> (\it <span class="ot">-&gt;</span> <span class="fu">length</span> str <span class="ot">`mod`</span> it <span class="op">==</span> <span class="dv">0</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                 <span class="kw">in</span> <span class="fu">any</span> (allEqual <span class="op">.</span> <span class="fu">flip</span> chunksOf str) divs</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="ot">allEqual ::</span> (<span class="dt">Eq</span> a) <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Bool</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>allEqual (x<span class="op">:</span>xs) <span class="ot">=</span> <span class="fu">all</span> (<span class="op">==</span> x) xs</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>allEqual [] <span class="ot">=</span> <span class="dt">True</span></span></code></pre></div>
   </div>
   </div>
-  <h1 id="day-3">Day 3</h1>
-  <h2 id="part-1-2">Part 1</h2>
   <div class="row">
-  <section id="the-problem" class="lhs">
-  <h3>The problem</h3>
-  <p>Our puzzle input this time is a list of Int</p>
-  <div class="sourceCode" id="cb15"><pre
-  class="sourceCode md"><code class="sourceCode markdown"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>987654321111111</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>811111111111119</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>234234234234278</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>818181911112111</span></code></pre></div>
+  <div class="lhs">
+  <p># Day 3 ## Part 1</p>
+  <p>### The problem Our puzzle input this time is a list of Int</p>
+  <div class="sourceCode" id="cb6"><pre
+  class="sourceCode md"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>987654321111111</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>811111111111119</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>234234234234278</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>818181911112111</span></code></pre></div>
   <p>each row is a bank of batteries our task is to find the maximum
   joltage for each bank and sum all of them</p>
   <p>In part 1 the maximum joltage of the bank is the biggest number
   resulting from picking any 2-digits in the bank (without changing
   their order)</p>
-  </section>
+  </div>
   <div class="code">
-  <div class="sourceCode" id="cb16"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TupleSections #-}</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day03</span> <span class="kw">where</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Arrow</span> ((&gt;&gt;&gt;))</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Function</span> ((&amp;), on)</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Foldable</span> (<span class="dt">Foldable</span>(foldMap&#39;))</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Monoid</span> (<span class="dt">Sum</span>(<span class="dt">Sum</span>, getSum))</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (sortBy)</span></code></pre></div>
+  <div class="sourceCode" id="cb7"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TupleSections #-}</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day03</span> <span class="kw">where</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Arrow</span> ((&gt;&gt;&gt;))</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Function</span> ((&amp;), on)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Foldable</span> (<span class="dt">Foldable</span>(foldMap&#39;))</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Monoid</span> (<span class="dt">Sum</span>(<span class="dt">Sum</span>, getSum))</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (sortBy)</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -425,8 +237,8 @@
   ourselves with digits today.</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb17"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Bank</span> <span class="ot">=</span> [<span class="dt">Int</span>]</span></code></pre></div>
+  <div class="sourceCode" id="cb8"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Bank</span> <span class="ot">=</span> [<span class="dt">Int</span>]</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -435,10 +247,10 @@
   convert each char in each line to an Int</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb18"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [[<span class="dt">Int</span>]]</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> <span class="fu">lines</span> </span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>      <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> (<span class="fu">map</span> (<span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> <span class="op">.</span> (<span class="op">:</span>[])))</span></code></pre></div>
+  <div class="sourceCode" id="cb9"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [[<span class="dt">Int</span>]]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> <span class="fu">lines</span> </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>      <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> (<span class="fu">map</span> (<span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> <span class="op">.</span> (<span class="op">:</span>[])))</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -449,27 +261,27 @@
   <p>then we just sum and that’s it</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb19"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> solve <span class="op">.</span> parse</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    solve ::</span> [<span class="dt">Bank</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    solve <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> <span class="fu">map</span> getBankJoltage</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    getBankJoltage ::</span> <span class="dt">Bank</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    getBankJoltage <span class="ot">=</span> <span class="fu">maximum</span> <span class="op">.</span> allJoltagesInBank</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="ot">    allJoltagesInBank ::</span> <span class="dt">Bank</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    allJoltagesInBank <span class="ot">=</span> <span class="fu">map</span> (\(a, b) <span class="ot">-&gt;</span> a <span class="op">*</span> <span class="dv">10</span> <span class="op">+</span> b) <span class="op">.</span> batteryPairs</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="ot">    batteryPairs ::</span> <span class="dt">Bank</span> <span class="ot">-&gt;</span> [(<span class="dt">Int</span>, <span class="dt">Int</span>)]</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    batteryPairs (x<span class="op">:</span>xs) <span class="ot">=</span> <span class="fu">map</span> (x,) xs <span class="op">&lt;&gt;</span> batteryPairs xs</span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    batteryPairs [] <span class="ot">=</span> []</span></code></pre></div>
+  <div class="sourceCode" id="cb10"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> solve <span class="op">.</span> parse</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    solve ::</span> [<span class="dt">Bank</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    solve <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> <span class="fu">map</span> getBankJoltage</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    getBankJoltage ::</span> <span class="dt">Bank</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    getBankJoltage <span class="ot">=</span> <span class="fu">maximum</span> <span class="op">.</span> allJoltagesInBank</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="ot">    allJoltagesInBank ::</span> <span class="dt">Bank</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    allJoltagesInBank <span class="ot">=</span> <span class="fu">map</span> (\(a, b) <span class="ot">-&gt;</span> a <span class="op">*</span> <span class="dv">10</span> <span class="op">+</span> b) <span class="op">.</span> batteryPairs</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="ot">    batteryPairs ::</span> <span class="dt">Bank</span> <span class="ot">-&gt;</span> [(<span class="dt">Int</span>, <span class="dt">Int</span>)]</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    batteryPairs (x<span class="op">:</span>xs) <span class="ot">=</span> <span class="fu">map</span> (x,) xs <span class="op">&lt;&gt;</span> batteryPairs xs</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    batteryPairs [] <span class="ot">=</span> []</span></code></pre></div>
   </div>
   </div>
-  <h2 id="part-2-2">Part 2</h2>
   <div class="row">
   <div class="lhs">
+  <p>## Part 2</p>
   <p>Part 2 is a bit more interesting, this time we need to pick 12
   batteries to find the joltage.</p>
   <p>The key of this algorithm is starting backwards, to make it simple,
@@ -484,7 +296,7 @@
   to give more choice to the next digits</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb20"><pre
+  <div class="sourceCode" id="cb11"><pre
   class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
   </div>
   </div>
@@ -496,13 +308,13 @@
   joltage</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb21"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | The solution for part2 is more efficient and could be used for part1 by using (getMaxJoltageOf 2)</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> solve <span class="op">.</span> parse</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="ot">    solve ::</span> [[<span class="dt">Int</span>]] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    solve <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> <span class="fu">map</span> (getMaxJoltageOf <span class="dv">12</span>)</span></code></pre></div>
+  <div class="sourceCode" id="cb12"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | The solution for part2 is more efficient and could be used for part1 by using (getMaxJoltageOf 2)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> solve <span class="op">.</span> parse</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ot">    solve ::</span> [[<span class="dt">Int</span>]] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    solve <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> <span class="fu">map</span> (getMaxJoltageOf <span class="dv">12</span>)</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -513,19 +325,19 @@
   so far and its position</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb22"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- |returns the max joltage of taking `size` batteries in a bank</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    getMaxJoltageOf ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    getMaxJoltageOf size digits <span class="ot">=</span> mergeDigits <span class="op">$</span> <span class="fu">reverse</span> <span class="op">$</span> go <span class="dv">0</span> <span class="dv">0</span> []</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>      <span class="kw">where</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="ot">        go ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>        go n _ acc <span class="op">|</span> n <span class="op">==</span> size <span class="ot">=</span> acc</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- | recursively find the next best digit</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- when picking a digit we know what positions in the original array are valid</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- we pick the greatest digit and if there are multiple we pick the first</span></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>        go ix <span class="fu">minBound</span> acc <span class="ot">=</span> <span class="kw">let</span> digitBounds <span class="ot">=</span> [<span class="fu">minBound</span><span class="op">..</span>(<span class="fu">length</span> digits <span class="op">-</span> size <span class="op">+</span> ix)]</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>                                 (maxDigitIx, maxDigit) <span class="ot">=</span> <span class="fu">head</span> <span class="op">.</span> sortBy (<span class="fu">compare</span> <span class="ot">`on`</span> <span class="fu">negate</span> <span class="op">.</span> <span class="fu">snd</span>) <span class="op">$</span> <span class="fu">map</span> (\(ix, ix2) <span class="ot">-&gt;</span> (ix, digits<span class="op">!!</span>ix2)) <span class="op">$</span> <span class="fu">zip</span> digitBounds digitBounds</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>                              <span class="kw">in</span> go (ix <span class="op">+</span> <span class="dv">1</span>) (maxDigitIx <span class="op">+</span><span class="dv">1</span>) (maxDigit<span class="op">:</span>acc)</span></code></pre></div>
+  <div class="sourceCode" id="cb13"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- |returns the max joltage of taking `size` batteries in a bank</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    getMaxJoltageOf ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    getMaxJoltageOf size digits <span class="ot">=</span> mergeDigits <span class="op">$</span> <span class="fu">reverse</span> <span class="op">$</span> go <span class="dv">0</span> <span class="dv">0</span> []</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>      <span class="kw">where</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ot">        go ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        go n _ acc <span class="op">|</span> n <span class="op">==</span> size <span class="ot">=</span> acc</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- | recursively find the next best digit</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- when picking a digit we know what positions in the original array are valid</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- we pick the greatest digit and if there are multiple we pick the first</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        go ix <span class="fu">minBound</span> acc <span class="ot">=</span> <span class="kw">let</span> digitBounds <span class="ot">=</span> [<span class="fu">minBound</span><span class="op">..</span>(<span class="fu">length</span> digits <span class="op">-</span> size <span class="op">+</span> ix)]</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>                                 (maxDigitIx, maxDigit) <span class="ot">=</span> <span class="fu">head</span> <span class="op">.</span> sortBy (<span class="fu">compare</span> <span class="ot">`on`</span> <span class="fu">negate</span> <span class="op">.</span> <span class="fu">snd</span>) <span class="op">$</span> <span class="fu">map</span> (\(ix, ix2) <span class="ot">-&gt;</span> (ix, digits<span class="op">!!</span>ix2)) <span class="op">$</span> <span class="fu">zip</span> digitBounds digitBounds</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>                              <span class="kw">in</span> go (ix <span class="op">+</span> <span class="dv">1</span>) (maxDigitIx <span class="op">+</span><span class="dv">1</span>) (maxDigit<span class="op">:</span>acc)</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -535,25 +347,24 @@
   <p>The traditional algorithm</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb23"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Merges digits into number. </span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- mergeDigits [1, 2, 3] === 123</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="ot">mergeDigits ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>mergeDigits xs <span class="ot">=</span> <span class="fu">zip</span> [<span class="dv">0</span><span class="op">..</span>] (<span class="fu">reverse</span> xs) </span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>          <span class="op">&amp;</span> foldMap&#39; (\(ix, d) <span class="ot">-&gt;</span> <span class="dt">Sum</span> (d <span class="op">*</span> <span class="dv">10</span> <span class="op">^</span> ix))</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>          <span class="op">&amp;</span> getSum</span></code></pre></div>
+  <div class="sourceCode" id="cb14"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Merges digits into number. </span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- mergeDigits [1, 2, 3] === 123</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ot">mergeDigits ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>mergeDigits xs <span class="ot">=</span> <span class="fu">zip</span> [<span class="dv">0</span><span class="op">..</span>] (<span class="fu">reverse</span> xs) </span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>          <span class="op">&amp;</span> foldMap&#39; (\(ix, d) <span class="ot">-&gt;</span> <span class="dt">Sum</span> (d <span class="op">*</span> <span class="dv">10</span> <span class="op">^</span> ix))</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>          <span class="op">&amp;</span> getSum</span></code></pre></div>
   </div>
   </div>
-  <h1 id="day-8">Day 8</h1>
-  <h2 id="part-1-3">Part 1</h2>
   <div class="row">
   <div class="lhs">
+  <p># Day 8 ## Part 1</p>
   <p>Today we get a list of electrical junctions in 3D space</p>
-  <div class="sourceCode" id="cb24"><pre
-  class="sourceCode md"><code class="sourceCode markdown"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>162,817,812</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>57,618,57</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>906,360,560</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+  <div class="sourceCode" id="cb15"><pre
+  class="sourceCode md"><code class="sourceCode markdown"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>162,817,812</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>57,618,57</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>906,360,560</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
   <p>We’re asked to pick the two closest ones and add them to a circuit,
   which may result in either:</p>
   <ul>
@@ -572,25 +383,25 @@
   <p>So today we’ll look at my naive solution.</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb25"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TemplateHaskell #-}</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# OPTIONS_GHC -Wno-name-shadowing #-}</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE BangPatterns #-}</span></span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day08</span> <span class="kw">where</span></span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Linear.V3</span></span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Function</span> (on)</span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List.Split</span> (splitOn)</span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">System.IO</span> (readFile&#39;)</span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (sortBy)</span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.HashMap.Strict</span> (<span class="dt">HashMap</span>, (!?) )</span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.HashMap.Strict</span> <span class="kw">as</span> <span class="dt">Map</span></span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Lens</span></span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Arrow</span> ((&gt;&gt;&gt;))</span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.State.Lazy</span> (<span class="dt">State</span>, evalState)</span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad</span> (forM_)</span></code></pre></div>
+  <div class="sourceCode" id="cb16"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TemplateHaskell #-}</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# OPTIONS_GHC -Wno-name-shadowing #-}</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE BangPatterns #-}</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day08</span> <span class="kw">where</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Linear.V3</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Function</span> (on)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List.Split</span> (splitOn)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">System.IO</span> (readFile&#39;)</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.List</span> (sortBy)</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.HashMap.Strict</span> (<span class="dt">HashMap</span>, (!?) )</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.HashMap.Strict</span> <span class="kw">as</span> <span class="dt">Map</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Lens</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Arrow</span> ((&gt;&gt;&gt;))</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.State.Lazy</span> (<span class="dt">State</span>, evalState)</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad</span> (forM_)</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -599,9 +410,9 @@
   and 3-dimensional vectors for the junctions</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb26"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">CircuitId</span> <span class="ot">=</span> <span class="dt">Int</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Junction</span> <span class="ot">=</span> (<span class="dt">V3</span> <span class="dt">Int</span>)</span></code></pre></div>
+  <div class="sourceCode" id="cb17"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">CircuitId</span> <span class="ot">=</span> <span class="dt">Int</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Junction</span> <span class="ot">=</span> (<span class="dt">V3</span> <span class="dt">Int</span>)</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -610,13 +421,13 @@
   line</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb27"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">Junction</span>]</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> <span class="fu">map</span> parseJunction <span class="op">.</span> <span class="fu">lines</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  parseJunction ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Junction</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  parseJunction line <span class="ot">=</span> <span class="kw">let</span> [x, y, z] <span class="ot">=</span> splitOn <span class="st">&quot;,&quot;</span> line</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">in</span> <span class="dt">V3</span> (<span class="fu">read</span> x) (<span class="fu">read</span> y) (<span class="fu">read</span> z)</span></code></pre></div>
+  <div class="sourceCode" id="cb18"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">Junction</span>]</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> <span class="fu">map</span> parseJunction <span class="op">.</span> <span class="fu">lines</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  parseJunction ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Junction</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  parseJunction line <span class="ot">=</span> <span class="kw">let</span> [x, y, z] <span class="ot">=</span> splitOn <span class="st">&quot;,&quot;</span> line</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">in</span> <span class="dt">V3</span> (<span class="fu">read</span> x) (<span class="fu">read</span> y) (<span class="fu">read</span> z)</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -625,12 +436,12 @@
   <code>sqrt</code> because the relative distances remain the same.</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb28"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ot">distanceTo ::</span> <span class="dt">Junction</span> <span class="ot">-&gt;</span> <span class="dt">Junction</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>distanceTo (<span class="dt">V3</span> x1 y1 z1) (<span class="dt">V3</span> x2 y2 z2) <span class="ot">=</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>         (<span class="fu">fromIntegral</span> (x2 <span class="op">-</span> x1)) <span class="op">**</span> <span class="fl">2.0</span></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>       <span class="op">+</span> (<span class="fu">fromIntegral</span> (y2 <span class="op">-</span> y1)) <span class="op">**</span> <span class="fl">2.0</span></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>       <span class="op">+</span> (<span class="fu">fromIntegral</span> (z2 <span class="op">-</span> z1)) <span class="op">**</span> <span class="fl">2.0</span></span></code></pre></div>
+  <div class="sourceCode" id="cb19"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ot">distanceTo ::</span> <span class="dt">Junction</span> <span class="ot">-&gt;</span> <span class="dt">Junction</span> <span class="ot">-&gt;</span> <span class="dt">Double</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>distanceTo (<span class="dt">V3</span> x1 y1 z1) (<span class="dt">V3</span> x2 y2 z2) <span class="ot">=</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>         (<span class="fu">fromIntegral</span> (x2 <span class="op">-</span> x1)) <span class="op">**</span> <span class="fl">2.0</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>       <span class="op">+</span> (<span class="fu">fromIntegral</span> (y2 <span class="op">-</span> y1)) <span class="op">**</span> <span class="fl">2.0</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>       <span class="op">+</span> (<span class="fu">fromIntegral</span> (z2 <span class="op">-</span> z1)) <span class="op">**</span> <span class="fl">2.0</span></span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -640,12 +451,12 @@
   with <code>distanceTo</code></p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb29"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ot">distances ::</span> [<span class="dt">Junction</span>] <span class="ot">-&gt;</span> [(<span class="dt">Junction</span>, <span class="dt">Junction</span>)]</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>distances vecs <span class="ot">=</span> [ (v1, v2)</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>                 <span class="op">|</span> (ix, v1) <span class="ot">&lt;-</span> <span class="fu">zip</span> [<span class="dv">0</span><span class="op">..</span>] vecs</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>                 , v2 <span class="ot">&lt;-</span> <span class="fu">drop</span> (ix <span class="op">+</span> <span class="dv">1</span>) vecs</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>                 ] <span class="op">&amp;</span> sortBy (<span class="fu">compare</span> <span class="ot">`on`</span> <span class="fu">uncurry</span> distanceTo)</span></code></pre></div>
+  <div class="sourceCode" id="cb20"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ot">distances ::</span> [<span class="dt">Junction</span>] <span class="ot">-&gt;</span> [(<span class="dt">Junction</span>, <span class="dt">Junction</span>)]</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>distances vecs <span class="ot">=</span> [ (v1, v2)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>                 <span class="op">|</span> (ix, v1) <span class="ot">&lt;-</span> <span class="fu">zip</span> [<span class="dv">0</span><span class="op">..</span>] vecs</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>                 , v2 <span class="ot">&lt;-</span> <span class="fu">drop</span> (ix <span class="op">+</span> <span class="dv">1</span>) vecs</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>                 ] <span class="op">&amp;</span> sortBy (<span class="fu">compare</span> <span class="ot">`on`</span> <span class="fu">uncurry</span> distanceTo)</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -664,15 +475,15 @@
   <p>this should be enough to perform the algorithm.</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb30"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">ProblemState</span> <span class="ot">=</span> <span class="dt">ProblemState</span> {</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  _nextCircuitId ::</span> <span class="dt">CircuitId</span>,</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="ot">  _junctions ::</span> <span class="dt">HashMap</span> <span class="dt">Junction</span> <span class="dt">CircuitId</span>,</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  _circuits ::</span> <span class="dt">HashMap</span> <span class="dt">CircuitId</span> [<span class="dt">Junction</span>]</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="ot">emptyState ::</span> <span class="dt">ProblemState</span></span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>emptyState <span class="ot">=</span> <span class="dt">ProblemState</span> <span class="dv">0</span> Map.empty Map.empty</span></code></pre></div>
+  <div class="sourceCode" id="cb21"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">ProblemState</span> <span class="ot">=</span> <span class="dt">ProblemState</span> {</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  _nextCircuitId ::</span> <span class="dt">CircuitId</span>,</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="ot">  _junctions ::</span> <span class="dt">HashMap</span> <span class="dt">Junction</span> <span class="dt">CircuitId</span>,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  _circuits ::</span> <span class="dt">HashMap</span> <span class="dt">CircuitId</span> [<span class="dt">Junction</span>]</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="ot">emptyState ::</span> <span class="dt">ProblemState</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>emptyState <span class="ot">=</span> <span class="dt">ProblemState</span> <span class="dv">0</span> Map.empty Map.empty</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -683,8 +494,8 @@
   href="https://leanpub.com/optics-by-example/">This Book</a>.</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb31"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>makeLenses <span class="dt">&#39;ProblemState</span></span></code></pre></div>
+  <div class="sourceCode" id="cb22"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>makeLenses <span class="dt">&#39;ProblemState</span></span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -693,8 +504,8 @@
   computations.</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb32"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Solver</span> a <span class="ot">=</span> <span class="dt">State</span> <span class="dt">ProblemState</span> a</span></code></pre></div>
+  <div class="sourceCode" id="cb23"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Solver</span> a <span class="ot">=</span> <span class="dt">State</span> <span class="dt">ProblemState</span> a</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -704,16 +515,16 @@
   <code>junctions</code> and <code>circuits</code> data structures</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb33"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ot">addJunctionToCircuit ::</span> (<span class="dt">V3</span> <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">CircuitId</span> <span class="ot">-&gt;</span> <span class="dt">Solver</span> ()</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>addJunctionToCircuit junction circuitId <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    junctions <span class="op">%=</span> Map.insert junction circuitId</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    circuits <span class="op">%=</span> Map.alter (insert junction) circuitId</span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> ()</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    insert ::</span> <span class="dt">V3</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> [<span class="dt">V3</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> [<span class="dt">V3</span> <span class="dt">Int</span>]</span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    insert junction <span class="dt">Nothing</span> <span class="ot">=</span> <span class="dt">Just</span> [junction]</span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    insert junction (<span class="dt">Just</span> js) <span class="ot">=</span> <span class="dt">Just</span> (junction <span class="op">:</span> js)</span></code></pre></div>
+  <div class="sourceCode" id="cb24"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ot">addJunctionToCircuit ::</span> (<span class="dt">V3</span> <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">CircuitId</span> <span class="ot">-&gt;</span> <span class="dt">Solver</span> ()</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>addJunctionToCircuit junction circuitId <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    junctions <span class="op">%=</span> Map.insert junction circuitId</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    circuits <span class="op">%=</span> Map.alter (insert junction) circuitId</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> ()</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    insert ::</span> <span class="dt">V3</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> [<span class="dt">V3</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> [<span class="dt">V3</span> <span class="dt">Int</span>]</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    insert junction <span class="dt">Nothing</span> <span class="ot">=</span> <span class="dt">Just</span> [junction]</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    insert junction (<span class="dt">Just</span> js) <span class="ot">=</span> <span class="dt">Just</span> (junction <span class="op">:</span> js)</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -750,25 +561,25 @@
   function today.</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb34"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ot">addJunctionPair ::</span> (<span class="dt">V3</span> <span class="dt">Int</span>, <span class="dt">V3</span> <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">Solver</span> ()</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>addJunctionPair (a, b) <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- find the circuits where a and b belong</span></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  mCa <span class="ot">&lt;-</span> uses junctions (<span class="op">!?</span> a)</span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  mCb <span class="ot">&lt;-</span> uses junctions (<span class="op">!?</span> b)</span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">case</span> (mCa, mCb) <span class="kw">of</span></span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Just</span> ca, <span class="dt">Nothing</span>) <span class="ot">-&gt;</span> addJunctionToCircuit b ca</span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Nothing</span>, <span class="dt">Just</span> cb) <span class="ot">-&gt;</span> addJunctionToCircuit a cb</span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Just</span> ca, <span class="dt">Just</span> cb) <span class="op">|</span> ca <span class="op">==</span> cb <span class="ot">-&gt;</span> <span class="fu">return</span> ()</span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Just</span> ca, <span class="dt">Just</span> cb) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
-<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>      junctionsInCa <span class="ot">&lt;-</span> uses circuits (<span class="op">Map.!</span> ca)</span>
-<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>      forM_ junctionsInCa <span class="op">$</span> <span class="fu">flip</span> addJunctionToCircuit cb</span>
-<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>      circuits <span class="op">%=</span> Map.delete ca</span>
-<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Nothing</span>, <span class="dt">Nothing</span>) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
-<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>      nextId <span class="ot">&lt;-</span> use nextCircuitId </span>
-<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>      nextCircuitId <span class="op">+=</span> <span class="dv">1</span></span>
-<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>      addJunctionToCircuit a nextId</span>
-<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>      addJunctionToCircuit b nextId</span></code></pre></div>
+  <div class="sourceCode" id="cb25"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ot">addJunctionPair ::</span> (<span class="dt">V3</span> <span class="dt">Int</span>, <span class="dt">V3</span> <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">Solver</span> ()</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>addJunctionPair (a, b) <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- find the circuits where a and b belong</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  mCa <span class="ot">&lt;-</span> uses junctions (<span class="op">!?</span> a)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  mCb <span class="ot">&lt;-</span> uses junctions (<span class="op">!?</span> b)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">case</span> (mCa, mCb) <span class="kw">of</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Just</span> ca, <span class="dt">Nothing</span>) <span class="ot">-&gt;</span> addJunctionToCircuit b ca</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Nothing</span>, <span class="dt">Just</span> cb) <span class="ot">-&gt;</span> addJunctionToCircuit a cb</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Just</span> ca, <span class="dt">Just</span> cb) <span class="op">|</span> ca <span class="op">==</span> cb <span class="ot">-&gt;</span> <span class="fu">return</span> ()</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Just</span> ca, <span class="dt">Just</span> cb) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>      junctionsInCa <span class="ot">&lt;-</span> uses circuits (<span class="op">Map.!</span> ca)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>      forM_ junctionsInCa <span class="op">$</span> <span class="fu">flip</span> addJunctionToCircuit cb</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>      circuits <span class="op">%=</span> Map.delete ca</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Nothing</span>, <span class="dt">Nothing</span>) <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>      nextId <span class="ot">&lt;-</span> use nextCircuitId </span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>      nextCircuitId <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>      addJunctionToCircuit a nextId</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>      addJunctionToCircuit b nextId</span></code></pre></div>
   </div>
   </div>
   <div class="row">
@@ -780,47 +591,215 @@
   multiplies their lengths</p>
   </div>
   <div class="code">
-  <div class="sourceCode" id="cb35"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> solvePart1 <span class="op">.</span> parse</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart1 ::</span> [<span class="dt">V3</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>solvePart1 junctions <span class="ot">=</span> <span class="fu">flip</span> evalState emptyState <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> pairs <span class="ot">=</span> <span class="fu">take</span> <span class="dv">1000</span> <span class="op">$</span> distances junctions</span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  forM_ pairs addJunctionPair</span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  uses circuits (Map.toList <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> (<span class="fu">length</span> <span class="op">.</span> <span class="fu">snd</span>) <span class="op">&gt;&gt;&gt;</span> sortBy (<span class="fu">flip</span> <span class="fu">compare</span>) <span class="op">&gt;&gt;&gt;</span> <span class="fu">take</span> <span class="dv">3</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">product</span>)</span></code></pre></div>
+  <div class="sourceCode" id="cb26"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> solvePart1 <span class="op">.</span> parse</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart1 ::</span> [<span class="dt">V3</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>solvePart1 junctions <span class="ot">=</span> <span class="fu">flip</span> evalState emptyState <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> pairs <span class="ot">=</span> <span class="fu">take</span> <span class="dv">1000</span> <span class="op">$</span> distances junctions</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  forM_ pairs addJunctionPair</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  uses circuits (Map.toList <span class="op">&gt;&gt;&gt;</span> <span class="fu">map</span> (<span class="fu">length</span> <span class="op">.</span> <span class="fu">snd</span>) <span class="op">&gt;&gt;&gt;</span> sortBy (<span class="fu">flip</span> <span class="fu">compare</span>) <span class="op">&gt;&gt;&gt;</span> <span class="fu">take</span> <span class="dv">3</span> <span class="op">&gt;&gt;&gt;</span> <span class="fu">product</span>)</span></code></pre></div>
   </div>
   </div>
-  <h2 id="part-2-3">Part 2</h2>
   <div class="row">
   <div class="lhs">
-  <p>For part 2 we’re asked to find the first pair of junctions that
-  when added will form 1 final circuit with all junctions, and multiply
-  their x coordinates.</p>
+  <p>## Part 2 For part 2 we’re asked to find the first pair of
+  junctions that when added will form 1 final circuit with all
+  junctions, and multiply their x coordinates.</p>
   <p>Turns out we already have everything to solve part2 as well.</p>
   <p><code>addUntilDone</code> - adds pairs until the condition is met
   and returns the correct pair</p>
   <p>We multiply their x coordinates and VOILA, day 8 is done.</p>
   </div>
   <div class="code">
+  <div class="sourceCode" id="cb27"><pre
+  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> solvePart2 <span class="op">.</span> parse</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart2 ::</span> [<span class="dt">V3</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>solvePart2 js <span class="ot">=</span> <span class="fu">flip</span> evalState emptyState <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> pairs <span class="ot">=</span> distances js</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>      addUntilDone [] <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;unreachable&quot;</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>      addUntilDone (n<span class="op">:</span>rest) <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>        addJunctionPair n</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>        junctionCount <span class="ot">&lt;-</span> uses junctions Map.size</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>        circuitCount <span class="ot">&lt;-</span> uses circuits Map.size</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> junctionCount <span class="op">==</span> <span class="fu">length</span> js <span class="op">&amp;&amp;</span> circuitCount <span class="op">==</span> <span class="dv">1</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>          <span class="kw">then</span> <span class="fu">return</span> n</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>          <span class="kw">else</span> addUntilDone rest</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>  (a, b) <span class="ot">&lt;-</span> addUntilDone pairs</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> <span class="op">$</span> a<span class="op">^.</span>_x <span class="op">*</span> b<span class="op">^.</span>_x</span></code></pre></div>
+  </div>
+  </div>
+  <h1 id="day-1">Day 1</h1>
+  <h2 id="part-1">Part 1</h2>
+  <div class="row">
+  <div class="lhs">
+  <p>Today’s puzzle involves a combination lock with a rotating dial.
+  We’re given a series of left (L) and right (R) rotations, and we need
+  to count how many times the dial lands exactly on position 0 after
+  completing each rotation.</p>
+  <p>The dial has 100 positions (0-99) and starts at position 50.</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb28"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>First, a few ceremonies…</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb29"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TypeApplications #-}</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day01</span> <span class="kw">where</span></span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <section class="lhs">
+  <h3> Parsing the Input</h3>
+  <p>I like to start by establishing a model and parsing the input.</p>
+  <p>A <code>List</code> of <code>Integer</code>s is a natural way to
+  model rotations. We’ll use <strong>positive integers</strong> for
+  right rotations and <strong>negative integers</strong> for left
+  rotations. This makes the math simpler later—we can just add the
+  rotation value to our current position.</p>
+  </section>
+  <div class="code">
+  <div class="sourceCode" id="cb30"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> <span class="fu">map</span> parseLine <span class="op">.</span> <span class="fu">lines</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    parseLine ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    parseLine (<span class="ch">&#39;R&#39;</span><span class="op">:</span>rest) <span class="ot">=</span> <span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> rest</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    parseLine (<span class="ch">&#39;L&#39;</span><span class="op">:</span>rest) <span class="ot">=</span> <span class="fu">negate</span> <span class="op">$</span> <span class="fu">read</span> <span class="op">@</span><span class="dt">Int</span> rest</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    parseLine _ <span class="ot">=</span> <span class="fu">undefined</span></span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <section class="lhs">
+  <h3> Solving Part 1</h3>
+  <p>To solve this, we’ll fold over the list of rotations while
+  maintaining a tuple of <code>(count, currentRotation)</code>:</p>
+  <ul>
+  <li><code>count</code>: the number of times we’ve landed exactly on
+  0</li>
+  <li><code>currentRotation</code>: our current position on the
+  dial</li>
+  </ul>
+  <p>The key insight: after each rotation, we check if our new position
+  is divisible by 100 by using modulo (meaning we’re at position 0).</p>
+  </section>
+  <div class="code">
+  <div class="sourceCode" id="cb31"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart1 ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>solvePart1 <span class="ot">=</span> <span class="fu">fst</span> <span class="op">.</span> foldl&#39; rotate (<span class="dv">0</span>, <span class="dv">50</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  rotate ::</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  rotate (count, currentRotation) rotation <span class="ot">=</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> newRotation <span class="ot">=</span> currentRotation <span class="op">+</span> rotation</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>        isZero <span class="ot">=</span> newRotation <span class="ot">`mod`</span> <span class="dv">100</span> <span class="op">==</span> <span class="dv">0</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> (count <span class="op">+</span> <span class="kw">if</span> isZero <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span>, newRotation)</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>All that’s left is to compose parsing with solving:</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb32"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> solvePart1 <span class="op">.</span> parse</span></code></pre></div>
+  </div>
+  </div>
+  <h2 id="part-2">Part 2</h2>
+  <div class="row">
+  <div class="lhs">
+  <p>Part 2 increases the difficulty: now we need to track how many
+  times the indicator <strong>passes through</strong> position 0,
+  including positions crossed during a rotation (not just where it
+  lands).</p>
+  <p>For example, if we’re at position 80 and rotate right by 30, we
+  pass through position 0 once during that rotation (80 → 90 → 100/0 →
+  10).</p>
+  <p>[h3] The Algorithm</p>
+  <p>The base algorithm remains a fold over the rotation list, but now
+  we need a more sophisticated way to count zero crossings:</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb33"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart2 ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>solvePart2 rotations <span class="ot">=</span> <span class="fu">fst</span> <span class="op">$</span> foldl&#39; go (<span class="dv">0</span>, <span class="dv">50</span>) rotations</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  go ::</span> (<span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (<span class="dt">Int</span>, <span class="dt">Int</span>)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  go (count, currentRotation) rotation <span class="ot">=</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> newRotation <span class="ot">=</span> currentRotation <span class="op">+</span> rotation</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>        clicks <span class="ot">=</span> numberOfClicks currentRotation rotation</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> (count <span class="op">+</span> clicks, newRotation)</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <section class="lhs">
+  <h3> Counting Zero Crossings</h3>
+  <p>The <code>numberOfClicks</code> function calculates how many times
+  we pass through zero during a single rotation.</p>
+  <p>The logic breaks down as follows:</p>
+  <ol type="1">
+  <li><strong>Normalize the current position</strong> to be in range [0,
+  99]</li>
+  <li><strong>Calculate complete rotations</strong>: Dividing the
+  rotation amount by 100 gives us how many full loops around the dial we
+  make (<code>totalRotations</code>)</li>
+  <li><strong>Check the remainder</strong>: After the complete
+  rotations, does the remainder push us through 0?
+  <ul>
+  <li><strong>Right rotation</strong>: We pass through 0 if
+  <code>currentPos + remainder &gt;= 100</code></li>
+  <li><strong>Left rotation</strong>: We pass through 0 if we’re not
+  already at 0 and <code>currentPos - remainder &lt;= 0</code></li>
+  </ul></li>
+  </ol>
+  </section>
+  <div class="code">
+  <div class="sourceCode" id="cb34"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ot">numberOfClicks ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>numberOfClicks pos rotation <span class="ot">=</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> actualPos <span class="ot">=</span> normalizeRotation pos</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>      (totalRotations, remainder) <span class="ot">=</span> <span class="fu">quotRem</span> (<span class="fu">abs</span> rotation) <span class="dv">100</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>      remainderClicks <span class="ot">=</span> <span class="kw">if</span> rotation <span class="op">&gt;</span> <span class="dv">0</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> actualPos <span class="op">+</span> remainder <span class="op">&gt;=</span> <span class="dv">100</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> actualPos <span class="op">/=</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> actualPos <span class="op">-</span> remainder <span class="op">&lt;=</span> <span class="dv">0</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">in</span> totalRotations <span class="op">+</span> <span class="kw">if</span> remainderClicks <span class="kw">then</span> <span class="dv">1</span> <span class="kw">else</span> <span class="dv">0</span></span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <section class="lhs">
+  <h3> Handling Negative Positions</h3>
+  <p>One edge case: Haskell’s <code>mod</code> operator doesn’t wrap
+  negative numbers the way we need for a circular dial. We need a custom
+  normalization function: This ensures that <code>-10</code> becomes
+  <code>90</code>, <code>-110</code> becomes <code>90</code>, etc.</p>
+  </section>
+  <div class="code">
+  <div class="sourceCode" id="cb35"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ot">normalizeRotation ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>normalizeRotation n</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> n <span class="op">&gt;=</span> <span class="dv">0</span>    <span class="ot">=</span> n <span class="ot">`mod`</span> <span class="dv">100</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span> (<span class="dv">100</span> <span class="op">-</span> (<span class="fu">abs</span> n) <span class="ot">`mod`</span> <span class="dv">100</span>) <span class="ot">`mod`</span> <span class="dv">100</span></span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <section class="lhs">
+  <h3> Final Solution</h3>
+  <p>And TA-DA!</p>
+  </section>
+  <div class="code">
   <div class="sourceCode" id="cb36"><pre
-  class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> solvePart2 <span class="op">.</span> parse</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart2 ::</span> [<span class="dt">V3</span> <span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>solvePart2 js <span class="ot">=</span> <span class="fu">flip</span> evalState emptyState <span class="op">$</span> <span class="kw">do</span></span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> pairs <span class="ot">=</span> distances js</span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>      addUntilDone [] <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;unreachable&quot;</span></span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>      addUntilDone (n<span class="op">:</span>rest) <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>        addJunctionPair n</span>
-<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>        junctionCount <span class="ot">&lt;-</span> uses junctions Map.size</span>
-<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>        circuitCount <span class="ot">&lt;-</span> uses circuits Map.size</span>
-<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> junctionCount <span class="op">==</span> <span class="fu">length</span> js <span class="op">&amp;&amp;</span> circuitCount <span class="op">==</span> <span class="dv">1</span></span>
-<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>          <span class="kw">then</span> <span class="fu">return</span> n</span>
-<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>          <span class="kw">else</span> addUntilDone rest</span>
-<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>  (a, b) <span class="ot">&lt;-</span> addUntilDone pairs</span>
-<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span> <span class="op">$</span> a<span class="op">^.</span>_x <span class="op">*</span> b<span class="op">^.</span>_x</span></code></pre></div>
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> solvePart2 <span class="op">.</span> parse</span></code></pre></div>
   </div>
   </div>
 

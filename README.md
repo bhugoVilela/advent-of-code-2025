@@ -2,6 +2,7 @@
 
 [Advent of Code 2025](https://adventofcode.com/2025) has started and this year I'm solving it in Haskell.
 
+- You can read explanations for each day [here](https://bhugovilela.github.io/advent-of-code-2025)
 - You can find the solutions [here](src); 
 - [main](app/Main.hs) is an executable to run/benchmark the solutions.
 
@@ -26,4 +27,18 @@ stack run aoc -- --day 1 --part 1
 
 # To execute tasty-bench benchmarks
 scripts/runBenchmarks dry
+```
+
+## Web Book
+Each day is fully documented [here](https://bhugovilela.github.io/advent-of-code-2025)
+
+(TODO give credit to original author)
+
+### Building the github pages
+```bash
+# To build docs/index.html and docs/style.css
+book/build.sh
+
+# To build in watch mode (required entr)
+book/watch.sh
 ```

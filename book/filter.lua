@@ -14,11 +14,35 @@ function is_header(block)
   return block.t == "Header"
 end
 
-function inspect(t) 
+function inspect(t)
   print('inspecting...')
   for key, value in pairs(t) do
     print("-", key, value)
   end
+end
+
+function paragraph_to_header(block)
+  if block.t ~= "Para" or #block.content == 0 then
+    return nil
+  end
+
+  local first = block.content[1]
+  if not first.text then
+    return nil
+  end
+
+  -- Check for [h1] through [h6] markers
+  local level = first.text:match("^%[h(%d)%]$")
+  if level then
+    level = tonumber(level)
+    if level >= 1 and level <= 6 then
+      -- Create header with remaining content (skip the marker)
+      local header_content = {table.unpack(block.content, 2)}
+      return pandoc.Header(level, header_content)
+    end
+  end
+
+  return nil
 end
 
 function Pandoc(doc)
@@ -27,6 +51,13 @@ function Pandoc(doc)
 
   while i <= #doc.blocks do
     local non_code = {}
+
+    local block = doc.blocks[i]
+    local header = paragraph_to_header(block)
+    if header then
+      block = header
+      doc.blocks[i] = block
+    end
 
     --collect consecutive non code-blocks
     while i <= #doc.blocks 
