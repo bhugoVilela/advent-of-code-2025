@@ -50,18 +50,26 @@ html {
   scroll-behavior: smooth;
 }
 
+
 #TOC {
   align-items: center;
   border-block: 1px solid currentColor;
   margin-bottom: 2rem;
 
   display: grid;
-  grid-template-columns: auto 1fr;
 
   > ul {
     display: grid;
-    grid-auto-flow: column;
   }
+
+  @media (min-width: 800px) {
+    grid-template-columns: auto 1fr;
+
+    > ul {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
+
 
   &:hover {
     color: var(--text);
@@ -175,7 +183,11 @@ code.haskell {
   .ch {
     color: var(--syntax-value);
   }
-  /* Char Literal */
+  /* String Literal */
+  .st {
+    color: var(--syntax-value);
+  }
+  /* keyword */
   .kw {
     color: var(--syntax-keyword);
     font-weight: bold;
