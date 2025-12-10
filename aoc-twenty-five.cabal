@@ -32,6 +32,7 @@ library
       Day06
       Day07
       Day08
+      Day09
   other-modules:
       Paths_aoc_twenty_five
   autogen-modules:
@@ -41,6 +42,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -O2
   build-depends:
       base >=4.7 && <5
+    , blaze-svg
     , containers
     , deepseq
     , gloss
@@ -62,6 +64,7 @@ executable aoc
   build-depends:
       aoc-twenty-five
     , base >=4.7 && <5
+    , blaze-svg
     , containers
     , deepseq
     , gloss
@@ -84,6 +87,7 @@ executable aoc-bench
   build-depends:
       aoc-twenty-five
     , base >=4.7 && <5
+    , blaze-svg
     , containers
     , deepseq
     , gloss
@@ -111,6 +115,7 @@ test-suite aoc-twenty-five-test
   build-depends:
       aoc-twenty-five
     , base >=4.7 && <5
+    , blaze-svg
     , containers
     , deepseq
     , gloss

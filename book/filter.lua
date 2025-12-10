@@ -21,6 +21,10 @@ function inspect(t)
   end
 end
 
+function is_pseudo_element(block)
+  return paragraph_to_header(block) ~= nil
+end
+
 function paragraph_to_header(block)
   if block.t ~= "Para" or #block.content == 0 then
     return nil
@@ -62,7 +66,8 @@ function Pandoc(doc)
     --collect consecutive non code-blocks
     while i <= #doc.blocks 
       and not is_haskell(doc.blocks[i])
-      and (not is_header(doc.blocks[i]) or doc.blocks[i].level > 2)
+      and not is_pseudo_element(doc.blocks[i])
+      and (not is_header(doc.blocks[i]) or doc.blocks[i].level > 3)
       do
       table.insert(non_code, doc.blocks[i])
       i = i + 1

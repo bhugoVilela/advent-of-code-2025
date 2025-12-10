@@ -10,21 +10,16 @@ We're given a series of left (L) and right (R) rotations, and we need to count h
 The dial has 100 positions (0-99) and starts at position 50.
 
 \begin{code}
-
-\end{code}
-
-First, a few ceremonies...
-
-\begin{code}
 {-# LANGUAGE TypeApplications #-}
 module Day01 where
 \end{code}
 
 [h3] Parsing the Input
 
-I like to start by establishing a model and parsing the input.
-
-A `List` of `Integer`s is a natural way to model rotations. We'll use **positive integers** for right rotations and **negative integers** for left rotations. This makes the math simpler later—we can just add the rotation value to our current position.
+Let's start by modeling the problem. A list of integers is perfect for representing
+rotations—we'll use **positive integers** for right rotations and **negative integers**
+for left rotations. This lets us simply add the rotation value to our current position
+without branching logic.
 
 \begin{code}
 parse :: String -> [Int]
@@ -44,7 +39,8 @@ To solve this, we'll fold over the list of rotations while maintaining a tuple o
 - `count`: the number of times we've landed exactly on 0
 - `currentRotation`: our current position on the dial
 
-The key insight: after each rotation, we check if our new position is divisible by 100 by using modulo (meaning we're at position 0).
+After each rotation, we check if our new position modulo 100 equals 0—meaning we've
+landed precisely on position 0.
 
 \begin{code}
 solvePart1 :: [Int] -> Int
@@ -111,8 +107,9 @@ numberOfClicks pos rotation =
 
 [h3] Handling Negative Positions
 
-One edge case: Haskell's `mod` operator doesn't wrap negative numbers the way we need for a circular dial. We need a custom normalization function:
-This ensures that `-10` becomes `90`, `-110` becomes `90`, etc.
+One important edge case: Haskell's `mod` operator doesn't wrap negative numbers the way
+we need for a circular dial. Our custom normalization function ensures that `-10` becomes
+`90`, `-110` becomes `90`, and so on—wrapping properly in the reverse direction.
 
 \begin{code}
 normalizeRotation :: Int -> Int
@@ -121,9 +118,7 @@ normalizeRotation n
   | otherwise = (100 - (abs n) `mod` 100) `mod` 100
 \end{code}
 
-[h3] Final Solution
-
-And TA-DA!
+With all the pieces in place, Part 2 comes together:
 
 \begin{code}
 part2 :: String -> Int

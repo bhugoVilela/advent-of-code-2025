@@ -11,9 +11,13 @@
   --syntax-keyword: currentColor;
 }
 
+* {
+  line-height: inherit;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: white;
+    --text: rgb(232, 232, 232);
     --bg: #18191B;
     --bg-blend: #2b2d31;
     --text-blend: rgb(200, 200, 200);
@@ -50,6 +54,14 @@ html {
   align-items: center;
   border-block: 1px solid currentColor;
   margin-bottom: 2rem;
+
+  display: grid;
+  grid-template-columns: auto 1fr;
+
+  > ul {
+    display: grid;
+    grid-auto-flow: column;
+  }
 
   &:hover {
     color: var(--text);
@@ -129,7 +141,7 @@ p {
 }
 
 pre, code {
-  font-family: "Source Code Pro", monospace;
+  font-family: "Fira Code", "Source Code Pro", monospace;
 }
 
 pre.sourceCode {
@@ -204,3 +216,59 @@ code.haskell {
     padding: 0;
   }
 }
+
+figure {
+  display: grid;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    max-width: min(400px, 80vw);
+    margin-bottom: .4rem;
+  }
+
+  figcaption {
+    color: var(--text-blend-2);
+    font-size: .8rem;
+    text-align: center;
+  }
+}
+
+h1 {
+  font-size: 1.8rem;
+  margin-bottom: 1.6rem;
+  margin-top: 4rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin-block: 1.6rem;
+}
+
+h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+p {
+  margin-top: 0px;
+}
+
+div.sourceCode {
+  margin-top: 0px;
+  line-height: 1.3;
+}
+
+a {
+  color: var(--syntax-data-type);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:visited {
+    color: var(--syntax-value);
+  }
+}
+

@@ -7,6 +7,7 @@ import Day05
 import Day06
 import Day07
 import Day08
+import Day09
 
 allDays :: [[String -> Int]]
 allDays = 
@@ -18,4 +19,5 @@ allDays =
   , [Day06.part1, Day06.part2]
   , [Day07.part1, Day07.part2]
   , [Day08.part1, Day08.part2]
+  , [Day09.part1, Day09.part2]
   ]
