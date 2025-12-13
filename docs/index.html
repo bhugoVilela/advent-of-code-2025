@@ -153,6 +153,11 @@
     <li><a href="#part-1-9" id="toc-part-1-9">Part 1</a></li>
     <li><a href="#part-2-9" id="toc-part-2-9">Part 2</a></li>
     </ul></li>
+    <li><a href="#day-11" id="toc-day-11">Day 11</a>
+    <ul>
+    <li><a href="#part-1-10" id="toc-part-1-10">Part 1</a></li>
+    <li><a href="#part-2-10" id="toc-part-2-10">Part 2</a></li>
+    </ul></li>
     </ul>
   </nav>
   
@@ -1880,6 +1885,256 @@
   class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart2 ::</span> [<span class="dt">Light</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
 <span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>solvePart2 <span class="ot">=</span> criesInUnsolved</span>
 <span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span> criesInUnsolved <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;fml&quot;</span></span></code></pre></div>
+  </div>
+  </div>
+  <h1 id="day-11">Day 11</h1>
+  <h2 id="part-1-10">Part 1</h2>
+  <div class="row">
+  <div class="lhs">
+  <p>Day 11 presents us with a network topology puzzle! We’re given a
+  list of network devices and their connections, forming a directed
+  acyclic graph (DAG). Each line describes which devices a particular
+  node connects to.</p>
+  <p>Here’s a simplified example of the input format:</p>
+  <div class="sourceCode" id="cb70"><pre
+  class="sourceCode md"><code class="sourceCode markdown"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="an">a:</span><span class="co"> you</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a><span class="an">you:</span><span class="co"> c d</span></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="an">c:</span><span class="co"> out</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="an">d:</span><span class="co"> out</span></span></code></pre></div>
+  <p>This describes a network where device <code>a</code> connects to
+  <code>you</code>, device <code>you</code> has two outgoing connections
+  to <code>c</code> and <code>d</code>, and both <code>c</code> and
+  <code>d</code> connect to the final destination <code>out</code>.</p>
+  <p>Our task for Part 1: <strong>count all possible paths</strong> from
+  the starting node <code>"you"</code> to the destination node
+  <code>"out"</code>. In the example above, there are 2 paths: -
+  <code>you → c → out</code> - <code>you → d → out</code></p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb71"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE MultiWayIf #-}</span></span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE TupleSections #-}</span></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE ImportQualifiedPost #-}</span></span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Day11</span> <span class="kw">where</span></span>
+<span id="cb71-7"><a href="#cb71-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Text</span> (<span class="dt">Text</span>)</span>
+<span id="cb71-8"><a href="#cb71-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Text</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">Text</span></span>
+<span id="cb71-9"><a href="#cb71-9" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">System.IO</span> (readFile&#39;)</span>
+<span id="cb71-10"><a href="#cb71-10" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.HashMap.Strict</span> (<span class="dt">HashMap</span>)</span>
+<span id="cb71-11"><a href="#cb71-11" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.HashMap.Strict</span> <span class="kw">qualified</span> <span class="kw">as</span> <span class="dt">Map</span></span>
+<span id="cb71-12"><a href="#cb71-12" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Data.Maybe</span> (catMaybes, fromMaybe)</span>
+<span id="cb71-13"><a href="#cb71-13" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.State.Strict</span> (<span class="dt">State</span>)</span>
+<span id="cb71-14"><a href="#cb71-14" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Debug.Trace</span> (traceShow, trace)</span>
+<span id="cb71-15"><a href="#cb71-15" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Text.Printf</span> (printf)</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>We’re using <code>Text</code> for efficient string handling (device
+  IDs can be arbitrary strings), and <code>HashMap</code> for fast O(log
+  n) lookups when traversing the graph—much better than linear searches
+  through lists!</p>
+  </div>
+  <div class="code">
+
+  </div>
+  </div>
+  <h3> Modeling and parsing</h3>
+  <div class="row">
+  <div class="lhs">
+  <p>The model is straightforward: we represent the entire network as a
+  mapping from each device ID to its list of outgoing connections.</p>
+  <p>Parsing is mercifully simple: each line has a device ID followed by
+  a colon, then a space-separated list of devices it connects to. We
+  strip the trailing colon with <code>Text.init</code> and collect the
+  rest as a list of outgoing connections.</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb72"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">DeviceId</span> <span class="ot">=</span> <span class="dt">Text</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Connections</span> <span class="ot">=</span> <span class="dt">HashMap</span> <span class="dt">DeviceId</span> [<span class="dt">DeviceId</span>]</span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a><span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Connections</span></span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>parse <span class="ot">=</span> Map.fromList <span class="op">.</span> <span class="fu">map</span> parseConnections <span class="op">.</span> Text.lines <span class="op">.</span> Text.pack</span>
+<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a><span class="ot">  parseConnections ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> (<span class="dt">DeviceId</span>, [<span class="dt">DeviceId</span>])</span>
+<span id="cb72-8"><a href="#cb72-8" aria-hidden="true" tabindex="-1"></a>  parseConnections line <span class="ot">=</span></span>
+<span id="cb72-9"><a href="#cb72-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (deviceId<span class="op">:</span>others) <span class="ot">=</span> Text.words line</span>
+<span id="cb72-10"><a href="#cb72-10" aria-hidden="true" tabindex="-1"></a>     <span class="kw">in</span> ((Text.init deviceId), others)</span></code></pre></div>
+  </div>
+  </div>
+  <h3> Counting paths with dynamic programming</h3>
+  <div class="row">
+  <div class="lhs">
+  <p>Here’s where things get interesting. The naive approach—recursively
+  exploring every path from start to end—would repeatedly recompute the
+  same subproblems. If device <code>c</code> is reachable from multiple
+  places in the network, we’d count all paths from <code>c</code> to
+  <code>out</code> multiple times!</p>
+  <p><strong>Dynamic programming to the rescue!</strong> We’ll use
+  memoization to cache the number of paths from each device to our
+  destination. The first time we visit a device, we compute its path
+  count and store it. Every subsequent visit just looks up the cached
+  value.</p>
+  <p>Think of it as working backwards from the destination: - The
+  destination itself has exactly 1 path (the empty path) - Any device
+  that connects directly to the destination has as many paths as it has
+  outgoing edges to the destination - Any other device has paths equal
+  to the sum of paths from all its children</p>
+  <p>This is essentially a <strong>depth-first search with
+  memoization</strong>, a classic DP technique for DAGs.</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb73"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>The <code>countConnections</code> function implements our memoized
+  DFS. Let’s break down what’s happening:</p>
+  <p><strong>Initial cache setup</strong>: We start with a clever
+  optimization—any device that connects directly to <code>end</code>
+  already has at least one path. We pre-populate the cache by counting
+  direct connections to the end node for every device.</p>
+  <p><strong>The <code>buildMap</code> recursion</strong> handles three
+  cases:</p>
+  <ol type="1">
+  <li><strong>Base case</strong>: If we’ve reached the end device,
+  return a cache with just <code>{end: 1}</code></li>
+  <li><strong>Cache hit</strong>: If we’ve already computed this
+  device’s path count, return the existing cache unchanged</li>
+  <li><strong>Cache miss</strong>: This is where the magic happens:
+  <ul>
+  <li>Get all children (devices this one connects to)</li>
+  <li>Recursively build the cache for each child using
+  <code>foldl'</code></li>
+  <li>Sum up the path counts from all children (that’s the total paths
+  through this device!)</li>
+  <li>Insert this device’s count into the cache</li>
+  </ul></li>
+  </ol>
+  <p>The fold accumulates the cache as we explore, ensuring each device
+  is only computed once. When we’re done, we look up our starting device
+  in the final cache to get the total path count.</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb74"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="ot">countConnections ::</span> <span class="dt">Connections</span> <span class="ot">-&gt;</span> <span class="dt">DeviceId</span> <span class="ot">-&gt;</span> <span class="dt">DeviceId</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>countConnections grid start end <span class="ot">=</span></span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> cache <span class="ot">=</span> Map.filter (<span class="op">&gt;</span> <span class="dv">0</span>) <span class="op">.</span> <span class="fu">fmap</span> (<span class="fu">length</span> <span class="op">.</span> <span class="fu">filter</span> (<span class="op">==</span> end)) <span class="op">$</span> grid</span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>      newCache <span class="ot">=</span> buildMap start cache</span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>   <span class="kw">in</span> newCache <span class="op">Map.!</span> start</span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    buildMap ::</span> <span class="dt">DeviceId</span> <span class="ot">-&gt;</span> <span class="dt">HashMap</span> <span class="dt">DeviceId</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">HashMap</span> <span class="dt">DeviceId</span> <span class="dt">Int</span></span>
+<span id="cb74-8"><a href="#cb74-8" aria-hidden="true" tabindex="-1"></a>    buildMap device cache</span>
+<span id="cb74-9"><a href="#cb74-9" aria-hidden="true" tabindex="-1"></a>      <span class="op">|</span> device <span class="op">==</span> end <span class="ot">=</span> Map.singleton end <span class="dv">1</span></span>
+<span id="cb74-10"><a href="#cb74-10" aria-hidden="true" tabindex="-1"></a>      <span class="op">|</span> Map.member device cache <span class="ot">=</span> cache</span>
+<span id="cb74-11"><a href="#cb74-11" aria-hidden="true" tabindex="-1"></a>      <span class="op">|</span> <span class="fu">otherwise</span> <span class="ot">=</span></span>
+<span id="cb74-12"><a href="#cb74-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> children <span class="ot">=</span> fromMaybe [] <span class="op">$</span> grid <span class="op">Map.!?</span> device</span>
+<span id="cb74-13"><a href="#cb74-13" aria-hidden="true" tabindex="-1"></a>            combine <span class="ot">=</span> <span class="fu">flip</span> buildMap</span>
+<span id="cb74-14"><a href="#cb74-14" aria-hidden="true" tabindex="-1"></a>            childrensMap <span class="ot">=</span> foldl&#39; combine cache children</span>
+<span id="cb74-15"><a href="#cb74-15" aria-hidden="true" tabindex="-1"></a>            childrenCount <span class="ot">=</span> <span class="fu">sum</span> <span class="op">.</span> catMaybes <span class="op">.</span> <span class="fu">map</span> (<span class="fu">flip</span> Map.lookup childrensMap) <span class="op">$</span> children</span>
+<span id="cb74-16"><a href="#cb74-16" aria-hidden="true" tabindex="-1"></a>         <span class="kw">in</span> Map.insert device childrenCount <span class="op">$</span> childrensMap</span>
+<span id="cb74-17"><a href="#cb74-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb74-18"><a href="#cb74-18" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart1 ::</span> <span class="dt">Connections</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb74-19"><a href="#cb74-19" aria-hidden="true" tabindex="-1"></a>solvePart1 graph <span class="ot">=</span> countConnections graph <span class="st">&quot;you&quot;</span> <span class="st">&quot;out&quot;</span></span>
+<span id="cb74-20"><a href="#cb74-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb74-21"><a href="#cb74-21" aria-hidden="true" tabindex="-1"></a><span class="ot">part1 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb74-22"><a href="#cb74-22" aria-hidden="true" tabindex="-1"></a>part1 <span class="ot">=</span> solvePart1 <span class="op">.</span> parse</span></code></pre></div>
+  </div>
+  </div>
+  <h2 id="part-2-10">Part 2</h2>
+  <div class="row">
+  <div class="lhs">
+  <p>Part 2 cranks up the complexity: now we need to count only paths
+  from <code>"svr"</code> to <code>"out"</code> that pass through
+  <strong>both</strong> <code>"fft"</code> and <code>"dac"</code>
+  devices. Not just one or the other—both!</p>
+  </div>
+  <div class="code">
+
+  </div>
+  </div>
+  <h3> The inclusion-exclusion principle</h3>
+  <div class="row">
+  <div class="lhs">
+  <p>At first glance, this seems like we need a completely different
+  algorithm. But there’s an elegant mathematical trick we can use: the
+  <a
+  href="https://en.wikipedia.org/wiki/Inclusion%E2%80%93exclusion_principle">inclusion-exclusion
+  principle</a>.</p>
+  <p>Think about it in terms of set operations. We want paths that
+  include both checkpoints, which is equivalent to:</p>
+  <pre><code>allPaths - pathsWithoutDac - pathsWithoutFft + pathsWithoutEither</code></pre>
+  <p>Why does this work? - Start with <strong>all paths</strong> from
+  svr to out - Subtract paths that <strong>don’t go through dac</strong>
+  (removes all paths missing that checkpoint) - Subtract paths that
+  <strong>don’t go through fft</strong> (removes all paths missing that
+  checkpoint) - Add back paths that <strong>avoid both</strong> (we
+  subtracted these twice, so we need to add them once)</p>
+  <p>This is the classic inclusion-exclusion formula: |A ∩ B| = |U| -
+  |Ā| - |B̄| + |Ā ∩ B̄|</p>
+  <p>And the beautiful part? We can compute “paths that avoid X” by
+  simply removing X from the graph and counting paths normally!</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb76"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart2 ::</span> <span class="dt">Connections</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>solvePart2 graph <span class="ot">=</span> <span class="fu">all</span> <span class="op">-</span> noDac <span class="op">-</span> noFft <span class="op">+</span> noDacNoFft</span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">all</span>   <span class="ot">=</span> countConnections graph <span class="st">&quot;svr&quot;</span> <span class="st">&quot;out&quot;</span></span>
+<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a>    noDac <span class="ot">=</span> countConnections (Map.delete <span class="st">&quot;dac&quot;</span> graph) <span class="st">&quot;svr&quot;</span> <span class="st">&quot;out&quot;</span></span>
+<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>    noFft <span class="ot">=</span> countConnections (Map.delete <span class="st">&quot;fft&quot;</span> graph) <span class="st">&quot;svr&quot;</span> <span class="st">&quot;out&quot;</span></span>
+<span id="cb76-7"><a href="#cb76-7" aria-hidden="true" tabindex="-1"></a>    noDacNoFft <span class="ot">=</span> countConnections (Map.delete <span class="st">&quot;dac&quot;</span> <span class="op">$</span> Map.delete <span class="st">&quot;fft&quot;</span> <span class="op">$</span> graph) <span class="st">&quot;svr&quot;</span> <span class="st">&quot;out&quot;</span></span></code></pre></div>
+  </div>
+  </div>
+  <h3> Alternative approach: counting subpaths</h3>
+  <div class="row">
+  <div class="lhs">
+  <p>There’s another way to think about this problem that’s perhaps more
+  intuitive. Any path that goes through both dac and fft must visit them
+  in some order:</p>
+  <ul>
+  <li>Either: <code>svr → ... → dac → ... → fft → ... → out</code></li>
+  <li>Or: <code>svr → ... → fft → ... → dac → ... → out</code></li>
+  </ul>
+  <p>These are mutually exclusive cases (you can’t visit dac before fft
+  <em>and</em> fft before dac in the same path), so we can count them
+  separately and add the results.</p>
+  <p>For the first case, we need:</p>
+  <pre><code>(paths from svr to dac) × (paths from dac to fft) × (paths from fft to out)</code></pre>
+  <p>Why multiplication? Because each path in the first segment can be
+  paired with each path in the second segment, and each of those
+  combinations can be paired with each path in the third segment. That’s
+  the fundamental counting principle!</p>
+  <p>Similarly for the second case. Add them together:</p>
+  </div>
+  <div class="code">
+  <div class="sourceCode" id="cb78"><pre
+  class="sourceCode haskell literate"><code class="sourceCode haskell"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="ot">solvePart2&#39; ::</span> <span class="dt">Connections</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>solvePart2&#39; graph <span class="ot">=</span> paths <span class="st">&quot;svr&quot;</span> <span class="st">&quot;dac&quot;</span> <span class="op">*</span> paths <span class="st">&quot;dac&quot;</span> <span class="st">&quot;fft&quot;</span> <span class="op">*</span> paths <span class="st">&quot;fft&quot;</span> <span class="st">&quot;out&quot;</span></span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>                  <span class="op">+</span> paths <span class="st">&quot;svr&quot;</span> <span class="st">&quot;fft&quot;</span> <span class="op">*</span> paths <span class="st">&quot;fft&quot;</span> <span class="st">&quot;dac&quot;</span> <span class="op">*</span> paths <span class="st">&quot;dac&quot;</span> <span class="st">&quot;out&quot;</span></span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a>    paths <span class="ot">=</span> countConnections graph</span>
+<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a><span class="ot">part2 ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></span>
+<span id="cb78-8"><a href="#cb78-8" aria-hidden="true" tabindex="-1"></a>part2 <span class="ot">=</span> solvePart2 <span class="op">.</span> parse</span></code></pre></div>
+  </div>
+  </div>
+  <div class="row">
+  <div class="lhs">
+  <p>This alternative formulation is arguably clearer—it directly
+  expresses the structure of the paths we’re counting. Both solutions
+  produce the same answer, but I find the inclusion-exclusion approach
+  (<code>solvePart2</code>) more elegant and generalizable. If we needed
+  to check for three or four required checkpoints, the combinatorial
+  explosion of cases in the subpath approach would get messy fast, while
+  inclusion-exclusion scales gracefully.</p>
+  </div>
+  <div class="code">
+
   </div>
   </div>
 
