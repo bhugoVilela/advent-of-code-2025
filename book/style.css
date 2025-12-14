@@ -2,7 +2,9 @@
   --text: black;
   --bg: white;
   --text-blend: #666;
+  --border: rgb(220, 220, 220);
   --bg-blend: rgb(200, 200, 200);
+  --bg-code-blend: rgb(250, 250, 250);
   --text-blend-2:rgb(182, 182, 182);
   --syntax-data-type: #6161c1;
   --syntax-comment: var(--text-blend-2);
@@ -18,8 +20,10 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --text: rgb(232, 232, 232);
+    --border: rgb(66, 66, 66);
     --bg: #18191B;
     --bg-blend: #2b2d31;
+    --bg-code-blend: #2b2d31;
     --text-blend: rgb(200, 200, 200);
     --text-blend-2: rgb(150, 150, 150);
     --syntax-value: orange;
@@ -45,11 +49,6 @@ blockquote {
     margin-bottom: 0;
   }
 }
-
-html {
-  scroll-behavior: smooth;
-}
-
 
 #TOC {
   align-items: center;
@@ -232,6 +231,13 @@ pre {
     grid-template-columns: 1fr;
     gap: 0.0rem;
     margin-bottom: 1rem;
+  }
+
+  .code {
+    background-color: var(--bg-code-blend);
+    padding: 10px !important;
+    border: 1px solid var(--border);
+    border-radius: 10px;
   }
 
   .row > p {
