@@ -32,6 +32,7 @@ dependencies:
 - lens
 - mtl
 - blaze-svg
+- z3
 
 ghc-options:
 - -Wall

@@ -30,7 +30,6 @@ of button presses to reach the target configuration
 module Day10 where
 import Data.List (uncons)
 import Data.Function ((&))
-import Data.Bits ((.<<.), (.|.))
 import Data.List.Split (splitOn)
 import Control.Arrow ((>>>))
 import System.IO (readFile')
@@ -38,7 +37,10 @@ import qualified Data.HashMap.Strict as Map
 import Data.HashMap.Strict (HashMap)
 import qualified Data.IntSet as Set
 import Data.IntSet (IntSet)
-import Debug.Trace (traceShowId)
+import qualified Z3.Monad as Z
+import Data.Maybe (catMaybes)
+import Control.Monad (forM, forM_)
+import GHC.IO.Unsafe (unsafePerformIO)
 \end{code}
 
 [h3] Modeling the problem
@@ -149,8 +151,8 @@ up the minimum button presses across all lights in our input.
 solvePart1 :: [Light] -> Int
 solvePart1 = sum . map findMinButtonPresses
 
-part1 :: IO ()
-part1 = readFile' "assets/day10-input.txt" >>= print . solvePart1 . parse
+part1 :: String -> Int
+part1 = solvePart1 . parse
 
 \end{code}
 
@@ -159,22 +161,115 @@ Part 2
 
 Unfortunately I haven't been able to solve part 2 yet... So instead here's a picture of my dog:
 
-
 ![My dog Pepita](pepita.webp)
 
-I have a few idea of how to solve it:
+[h3] SOLVED!
 
-1. Using a [linear programming](https://en.wikipedia.org/wiki/Linear_programming) solver - to find the minimum of the set of linear equations
-2. Using an [SMT](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories) solver
-3. Brute forcing with a lot of optimizations + paralellism
+Hey there, this is Hugo from the future, I have finally been able to link Z3 with haskell on my macbook.
+I'm new to Z3 and SMT solvers in general so I had to take some time to learn how they work.
 
-My first instinct was to go with idea #1 but I've spent too long now trying to make it work in haskell.
-Now I don't have enough time to try idea #3 today but I'll come back to it at some point.
+After solving the problem in python I was ready to try again with haskell.
+So here we go
 
+[h3] Reframing the problem as a linear equations problem
 
+We're trying to minimize the following equation:
+
+```md
+button_0 + button_1 + ... button_n
+```
+
+where `button_i` is the number of keypresses of the i_th button in the light.
+
+Additionally for every joltage we find every button that increases it. Then we know that
+the sum of those button clicks must be equal to that joltage.
+
+```md
+button_A + ... + button_Z = joltage
+where
+button_X is a button that increases that joltage
+```
+
+[h3] Solving the problem
+
+First we write a small function to get the linear equations.
+
+For each joltage we find every button that increases it and store its index.
 
 \begin{code}
-solvePart2 :: [Light] -> Int
-solvePart2 = criesInUnsolved
-  where criesInUnsolved = error "fml"
+getLinearEquations :: Light -> [(Int, [Int])]
+getLinearEquations (Light _ buttons joltages) =
+  flip map (enumerated joltages) $ \(jix, joltage) ->
+    let buttons' = (enumerated buttons) 
+            & filter (any (== jix) . snd) 
+            & map fst
+     in (joltage, buttons')
+
+enumerated :: [b] -> [(Int, b)]
+enumerated = zip [0..]
+\end{code}
+
+Then, we need to model our problem in Z3, unfortunately the haskell bindings leave a lot to be desired
+in terms of readability.
+
+\begin{code}
+script :: Light -> Z.Z3 Int
+script light@(Light _ buttons _) = do
+\end{code}
+
+We create a variable for each button that represent the number of button presses
+
+\begin{code}
+  vars <- forM [0..length buttons - 1] $ Z.mkFreshIntVar . show
+\end{code}
+
+Then we add a contraint - a button press must be greater or equal to 0
+
+\begin{code}
+  forM_ vars $ \var -> 
+    Z.optimizeAssert =<< Z.mkGe var =<< Z.mkIntNum 0
+\end{code}
+
+Then we go through each equation and write a constraint:
+
+- the sum of the button presses of a joltage must be equal to that joltage
+
+\begin{code}
+  -- for each equation
+  forM_ (getLinearEquations light) $ \(joltage, buttons) -> do
+    let buttonVars = map (vars !!) buttons
+    buttonSum <- Z.mkAdd buttonVars
+    -- the sum of the buttons must be equal to the joltage
+    Z.optimizeAssert =<< Z.mkEq buttonSum =<< Z.mkIntNum joltage
+\end{code}
+
+Finally 
+
+- We create our goal (the total number of key presses)
+- tell Z3 to minimize it
+- tell Z3 to run with `Z.optimizeCheck []`
+- read back the current value of each variable
+- return the sum
+
+\begin{code}
+  goal <- Z.mkAdd vars
+
+  Z.optimizeMinimize goal
+  _ <- Z.optimizeCheck []
+  m <- Z.optimizeGetModel
+
+  res <- sum . catMaybes <$> mapM (Z.evalInt m) vars 
+  return $ fromInteger res
+\end{code}
+
+Ooof, what a verbose mess, at last we're ready to wrap it.
+
+We need to resort to `unsafePerformIO` to keep our part2
+
+\begin{code}
+solvePart2 :: [Light] -> IO Int
+solvePart2 = fmap sum . mapM (Z.evalZ3 . script)
+
+part2 :: String -> Int
+part2 = unsafePerformIO . solvePart2 . parse
 \end{code}

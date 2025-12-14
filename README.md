@@ -30,6 +30,16 @@ Benchmarks measured using Criterion on an Apple M1 Pro:
 
 ![Benchmarks](https://github.com/bhugoVilela/advent-of-code-2025/blob/main/bench.svg?raw=true)
 
+## Instalation
+
+### Requirements
+- GHC with compatible base (see [package.yaml](package.yaml))
+- Z3 4.8.17 ([macOS instructions](https://stackoverflow.com/a/77258447))
+
+```bash
+stack build
+```
+
 ## Running Solutions
 
 > [!WARNING]

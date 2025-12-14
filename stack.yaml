@@ -37,6 +37,7 @@ packages:
 extra-deps:
 - text-2.1.2@sha256:2898d240693a61911efc6e9f9dd3f05a1561684b0c42da964b76ae6463dba754,10989
 - parsec-3.1.18.0@sha256:dfbb9835b8abc966b6bbd34340ef5122227b4cf4480062b85ca4c4704f054f98,4535
+- z3-408.2@sha256:1f8b6ccbcc6d06a6701900a09fcfcbaf86ed8a8495615710bef4da5cdb073a3f,4226
 
 # - acme-missiles-0.3
 # - git: https://github.com/commercialhaskell/stack.git
@@ -62,8 +63,8 @@ extra-deps:
 # arch: x86_64
 #
 # Extra directories used by Stack for building
-extra-include-dirs: []
-extra-lib-dirs: []
+extra-include-dirs: ["./z3-4.8.17-arm64-osx-10.16/include"]
+extra-lib-dirs: ["/usr/local/lib"]
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
