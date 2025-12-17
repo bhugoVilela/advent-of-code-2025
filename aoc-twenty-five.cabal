@@ -125,6 +125,7 @@ test-suite aoc-twenty-five-test
     , containers
     , deepseq
     , gloss
+    , hspec
     , lens
     , linear
     , mtl

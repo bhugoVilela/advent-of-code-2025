@@ -32,7 +32,6 @@ import Data.List (uncons)
 import Data.Function ((&))
 import Data.List.Split (splitOn)
 import Control.Arrow ((>>>))
-import System.IO (readFile')
 import qualified Data.HashMap.Strict as Map
 import Data.HashMap.Strict (HashMap)
 import qualified Data.IntSet as Set
