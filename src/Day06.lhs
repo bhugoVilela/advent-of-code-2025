@@ -16,10 +16,6 @@ If the operation is `*`, we get `30`.
 
 \begin{code}
 {-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
-{-# OPTIONS_GHC -Wno-name-shadowing #-}
-{-# LANGUAGE BangPatterns #-}
-
 module Day06 where
 import Data.List (unsnoc, transpose)
 import Data.Char (isSpace)
@@ -44,7 +40,7 @@ part1 str =
       matrix :: [[Int]]
       matrix = transpose . map (map (read @Int) . words) $ rows
       ops = words opsLine
-   in sum . map (uncurry getOp) $ zip ops matrix
+   in sum $ zipWith getOp ops matrix
 \end{code}
 
 [h3] Operations
@@ -92,11 +88,11 @@ part2 str =
   let Just (rows, opsLine) = unsnoc . lines $ str
       numbers = rows
              & transpose
-             & map (strip)
+             & map strip
              & splitOn null
              & map (map (read @Int))
       ops = words opsLine
-   in sum . map (uncurry getOp) $ zip ops numbers
+   in sum $ zipWith getOp ops numbers
 \end{code}
 
 [h3] Helper Functions
@@ -105,7 +101,7 @@ We need helpers to strip whitespace and split on a predicate.
 
 \begin{code}
 strip :: String -> String
-strip = dropWhile (isSpace) >>> takeWhile (not . isSpace)
+strip = dropWhile isSpace >>> takeWhile (not . isSpace)
 
 splitOn :: (a -> Bool) -> [a] -> [[a]]
 splitOn _ [] = []

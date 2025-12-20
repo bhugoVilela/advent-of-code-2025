@@ -26,21 +26,15 @@ destination node `"out"`. In the example above, there are 2 paths:
 - `you → d → out`
 
 \begin{code}
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Day11 where
 import Data.Text (Text)
 import Data.Text qualified as Text
-import System.IO (readFile')
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as Map
-import Data.Maybe (catMaybes, fromMaybe)
-import Control.Monad.State.Strict (State)
-import Debug.Trace (traceShow, trace)
-import Text.Printf (printf)
+import Data.Maybe (fromMaybe, mapMaybe)
 \end{code}
 
 We're using `Text` for efficient string handling (device IDs can be arbitrary strings),
@@ -66,7 +60,7 @@ parse = Map.fromList . map parseConnections . Text.lines . Text.pack
   parseConnections :: Text -> (DeviceId, [DeviceId])
   parseConnections line =
     let (deviceId:others) = Text.words line
-     in ((Text.init deviceId), others)
+     in (Text.init deviceId, others)
 \end{code}
 
 [h3] Counting paths with dynamic programming
@@ -129,8 +123,8 @@ countConnections grid start end =
         let children = fromMaybe [] $ grid Map.!? device
             combine = flip buildMap
             childrensMap = foldl' combine cache children
-            childrenCount = sum . catMaybes . map (flip Map.lookup childrensMap) $ children
-         in Map.insert device childrenCount $ childrensMap
+            childrenCount = sum . mapMaybe (`Map.lookup` childrensMap) $ children
+         in Map.insert device childrenCount childrensMap
 
 solvePart1 :: Connections -> Int
 solvePart1 graph = countConnections graph "you" "out"
@@ -175,7 +169,7 @@ solvePart2 graph = all - noDac - noFft + noDacNoFft
     all   = countConnections graph "svr" "out"
     noDac = countConnections (Map.delete "dac" graph) "svr" "out"
     noFft = countConnections (Map.delete "fft" graph) "svr" "out"
-    noDacNoFft = countConnections (Map.delete "dac" $ Map.delete "fft" $ graph) "svr" "out"
+    noDacNoFft = countConnections (Map.delete "dac" $ Map.delete "fft" graph) "svr" "out"
 \end{code}
 
 [h3] Alternative approach: counting subpaths

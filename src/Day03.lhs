@@ -24,15 +24,13 @@ joltage is the largest such number we can form.
 
 \begin{code}
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TupleSections #-}
 module Day03 where
 
 import Control.Arrow ((>>>))
 import Data.Function ((&), on)
-import Data.Foldable (Foldable(foldMap'))
+import Data.Foldable (Foldable(foldMap'), minimumBy)
 import Data.Monoid (Sum(Sum, getSum))
-import Data.List (sortBy)
 \end{code}
 
 [h3] The Solution
@@ -125,7 +123,7 @@ index we can pick from (to maintain order), and our accumulated result.
         -- when picking a digit we know what positions in the original array are valid
         -- we pick the greatest digit and if there are multiple we pick the first
         go ix minBound acc = let digitBounds = [minBound..(length digits - size + ix)]
-                                 (maxDigitIx, maxDigit) = head . sortBy (compare `on` negate . snd) $ map (\(ix, ix2) -> (ix, digits!!ix2)) $ zip digitBounds digitBounds
+                                 (maxDigitIx, maxDigit) = minimumBy (compare `on` negate . snd) $ zipWith (\ix ix2 -> (ix, digits !! ix2)) digitBounds digitBounds
                               in go (ix + 1) (maxDigitIx +1) (maxDigit:acc)
 \end{code}
 
@@ -137,7 +135,7 @@ power of 10 based on its position.
 -- | Merges digits into number.
 -- mergeDigits [1, 2, 3] === 123
 mergeDigits :: [Int] -> Int
-mergeDigits xs = zip [0..] (reverse xs)
+mergeDigits xs = zip [(0 :: Int)..] (reverse xs)
           & foldMap' (\(ix, d) -> Sum (d * 10 ^ ix))
           & getSum
 

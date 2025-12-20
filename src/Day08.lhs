@@ -32,15 +32,11 @@ my original, more naive approach using the State monad and some good old hashmap
 \begin{code}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
-{-# OPTIONS_GHC -Wno-name-shadowing #-}
 {-# LANGUAGE BangPatterns #-}
-
 module Day08 where
 import Linear.V3
 import Data.Function (on)
 import Data.List.Split (splitOn)
-import System.IO (readFile')
 import Data.List (sortBy)
 import Data.HashMap.Strict (HashMap, (!?) )
 import qualified Data.HashMap.Strict as Map
@@ -76,9 +72,9 @@ stays the same and we save some computation.
 \begin{code}
 distanceTo :: Junction -> Junction -> Double
 distanceTo (V3 x1 y1 z1) (V3 x2 y2 z2) =
-         (fromIntegral (x2 - x1)) ** 2.0
-       + (fromIntegral (y2 - y1)) ** 2.0
-       + (fromIntegral (z2 - z1)) ** 2.0
+         fromIntegral (x2 - x1) ** 2.0
+       + fromIntegral (y2 - y1) ** 2.0
+       + fromIntegral (z2 - z1) ** 2.0
 \end{code}
 
 The `distances` function generates all possible junction pairs and sorts them by distance,
@@ -132,7 +128,7 @@ Adding a junction to a circuit requires updating both indexes: we record which c
 the junction belongs to, and add the junction to that circuit's member list.
 
 \begin{code}
-addJunctionToCircuit :: (V3 Int) -> CircuitId -> Solver ()
+addJunctionToCircuit :: V3 Int -> CircuitId -> Solver ()
 addJunctionToCircuit junction circuitId = do
     junctions %= Map.insert junction circuitId
     circuits %= Map.alter (insert junction) circuitId

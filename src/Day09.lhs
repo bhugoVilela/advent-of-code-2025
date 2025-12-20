@@ -13,8 +13,7 @@ and we count tiles inclusively—so a rectangle from (0,0) to (2,2) contains 9 t
 Oooof, these imports are getting out of hand! But hey, we've got SVG rendering to do later.
 
 \begin{code}
-{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
+{- HLINT ignore "Eta reduce" -}
 {-# LANGUAGE OverloadedStrings #-}
 module Day09 where
 import Linear.V2
@@ -23,7 +22,7 @@ import Control.Arrow ((>>>))
 import System.IO (readFile')
 import Data.Function ((&))
 import Control.Lens.Getter
-import Text.Blaze.Svg11 ((!), m)
+import Text.Blaze.Svg11 ((!), m, l)
 import qualified Text.Blaze.Svg11 as S
 import qualified Text.Blaze.Svg11.Attributes as A
 import Text.Blaze.Svg.Renderer.String (renderSvg)
@@ -31,7 +30,6 @@ import Text.Printf (printf)
 import Data.String (IsString(fromString))
 import Text.Blaze.Svg (mkPath)
 import Control.Monad (forM_)
-import Text.Blaze.Svg11 (l)
 \end{code}
 
 The `linear` library's `V2 Int` type is perfect for 2D points—it gives us
@@ -129,7 +127,7 @@ solvePart2 squares@(p:ps) =
                     , not (intersects p1 p2 edges)
                     ]
        edges = zip (p:ps) (ps ++ [p])
-   in maximum $ map (uncurry area) $ rectangles
+   in maximum $ map (uncurry area) rectangles
 \end{code}
 
 The `intersects` function checks if any polygon edge crosses through our candidate
@@ -138,7 +136,7 @@ rectangle's interior. If any edge overlaps, the rectangle is invalid.
 
 \begin{code}
 intersects :: V2 Int -> V2 Int -> [(V2 Int, V2 Int)] -> Bool
-intersects p1 p2 edges = any inside $ edges
+intersects p1 p2 edges = any inside edges
   where
     inside :: (V2 Int, V2 Int) -> Bool
     inside (e1, e2) = min (e1^._x) (e2^._x) < maxX 

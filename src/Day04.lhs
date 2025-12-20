@@ -12,9 +12,6 @@ fewer than 4 neighboring rolls in the 8 adjacent positions (including diagonals)
 In other words, rolls that are too crowded (4+ neighbors) are inaccessible.
 
 \begin{code}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE BangPatterns #-}
 
 module Day04 where

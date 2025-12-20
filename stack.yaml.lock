@@ -27,7 +27,7 @@ packages:
     hackage: z3-408.2@sha256:1f8b6ccbcc6d06a6701900a09fcfcbaf86ed8a8495615710bef4da5cdb073a3f,4226
 snapshots:
 - completed:
-    sha256: bcbc80a081dbf9d701bb8c46f0212b251acbe6cf64332e6e3c8b108c13794841
-    size: 685947
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/5/5.yaml
-  original: nightly-2025-05-05
+    sha256: 8dd2b298abf5214ce1cc339f1282b9d424d66c511d433f874c12a92989dc3007
+    size: 715169
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2025/12/20.yaml
+  original: nightly-2025-12-20

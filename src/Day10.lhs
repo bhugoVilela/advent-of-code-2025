@@ -76,7 +76,7 @@ parse = map (parseLine . words) . lines
   parseLight str = filter (\c -> c /= '[' && c /= ']') str
                  & zip [0..]
                  & filter ((== '#') . snd)
-                 & map (fst)
+                 & map fst
                  & Set.fromList
 
   parseButton :: String -> [Int]
@@ -122,7 +122,7 @@ findMinButtonPresses (Light target buttons _) =
   breadth :: Int -> HashMap IntSet Int -> [IntSet] -> (HashMap IntSet Int, [IntSet])
   breadth steps cache states = 
     let !b = concatMap (\s -> 
-              filter (not . (flip Map.member cache)) 
+              filter (not . (`Map.member` cache)) 
               . map (clickButton s) 
               $ buttons ) 
               states
@@ -133,8 +133,7 @@ findMinButtonPresses (Light target buttons _) =
       else breadth (steps + 1) updatedCache b
 
   clickButton :: IntSet -> [Int] -> IntSet
-  clickButton current button = 
-    foldl' (toggleLight) current button
+  clickButton = foldl' toggleLight
 
   toggleLight light button =
     if button `Set.member` light
@@ -245,8 +244,8 @@ represents one constraint equation.
 getLinearEquations :: Light -> [(Int, [Int])]
 getLinearEquations (Light _ buttons joltages) =
   flip map (enumerated joltages) $ \(jix, joltage) ->
-    let buttons' = (enumerated buttons) 
-            & filter (any (== jix) . snd) 
+    let buttons' = enumerated buttons 
+            & filter (elem jix . snd) 
             & map fst
      in (joltage, buttons')
 
@@ -281,7 +280,7 @@ Each variable must be ≥ 0 since we can't press a button a negative number of t
 
 \begin{code}
   forM_ vars $ \var ->
-    Z.optimizeAssert =<< Z.mkGe var =<< Z.mkIntNum 0
+    Z.optimizeAssert =<< Z.mkGe var =<< Z.mkIntNum (0 :: Int)
 \end{code}
 
 **Step 3: Add joltage equality constraints**
@@ -307,7 +306,7 @@ to each variable and sum them up.
 \begin{code}
   goal <- Z.mkAdd vars
 
-  Z.optimizeMinimize goal
+  _ <- Z.optimizeMinimize goal
   _ <- Z.optimizeCheck []
   m <- Z.optimizeGetModel
 

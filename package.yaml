@@ -39,8 +39,11 @@ ghc-options:
 - -Wcompat
 - -Widentities
 - -Wincomplete-record-updates
-- -Wincomplete-uni-patterns
-- -Wmissing-export-lists
+- -Wno-incomplete-uni-patterns
+- -Wno-incomplete-patterns
+- -Wno-missing-export-lists
+- -Wno-name-shadowing
+- -Wno-x-partial
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints

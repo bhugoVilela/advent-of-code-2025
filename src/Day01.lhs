@@ -29,7 +29,6 @@ parse = map parseLine . lines
     parseLine ('R':rest) = read @Int rest
     parseLine ('L':rest) = negate $ read @Int rest
     parseLine _ = undefined
-
 \end{code}
 
 [h3] Solving Part 1
@@ -115,7 +114,7 @@ we need for a circular dial. Our custom normalization function ensures that `-10
 normalizeRotation :: Int -> Int
 normalizeRotation n
   | n >= 0    = n `mod` 100
-  | otherwise = (100 - (abs n) `mod` 100) `mod` 100
+  | otherwise = (100 - abs n `mod` 100) `mod` 100
 \end{code}
 
 With all the pieces in place, Part 2 comes together:

@@ -15,11 +15,6 @@ new positions.
 Our task: count how many unique tachyons the beam(s) will hit.
 
 \begin{code}
-{-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
-{-# OPTIONS_GHC -Wno-name-shadowing #-}
-{-# LANGUAGE BangPatterns #-}
-
 module Day07 where
 import Data.Function ((&), on)
 import Data.List (find, sortBy, sort, uncons)
@@ -66,7 +61,7 @@ parse str = let chars :: [(Char, (Int, Int))]
                            & groupBy fst
                            & map (\col -> (fst $ head col, map snd col))
                            & Map.fromList
-                           & fmap (sort)
+                           & fmap sort
              in Instructions start tachyons
 \end{code}
 
@@ -76,7 +71,7 @@ A simple grouping function that clusters consecutive elements with the same key.
 
 \begin{code}
 groupBy :: (Eq b) => (a -> b) -> [a] -> [[a]]
-groupBy fn [] = []
+groupBy _ [] = []
 groupBy fn (x:xs) = let (group, rest) = span (\a -> fn a == fn x) xs
                      in (x:group) : groupBy fn rest
 \end{code}

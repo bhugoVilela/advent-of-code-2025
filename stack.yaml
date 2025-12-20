@@ -17,7 +17,7 @@
 #
 # snapshot: ./custom-snapshot.yaml
 # snapshot: https://example.com/snapshots/2024-01-01.yaml
-snapshot: nightly-2025-05-05
+snapshot: nightly-2025-12-20
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -63,8 +63,10 @@ extra-deps:
 # arch: x86_64
 #
 # Extra directories used by Stack for building
-extra-include-dirs: ["./z3-4.8.17-arm64-osx-10.16/include"]
-extra-lib-dirs: ["/usr/local/lib"]
+extra-include-dirs: 
+- ./z3-4.8.17-arm64-osx-10.16/include
+extra-lib-dirs: 
+- /usr/local/lib
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor

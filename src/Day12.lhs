@@ -42,7 +42,6 @@ import Data.Bifunctor (bimap)
 import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
 import Control.Arrow ((>>>))
-import System.IO (readFile')
 \end{code}
 
 [h3] Modeling the problem
@@ -77,7 +76,7 @@ parse = splitOn "\n\n"
                   (map parseTree . lines)
   where
   parsePresent :: String -> Present
-  parsePresent = lines >>> tail >>> map (map (== '#'))
+  parsePresent = lines >>> drop 1 >>> map (map (== '#'))
 
   parseTree :: String -> Tree
   parseTree str = let (fst:presents) = splitOn " " str
@@ -121,15 +120,15 @@ dimensions.
 
 \begin{code}
 solvePart1 :: Problem -> Int
-solvePart1 (presents, trees) = length $ filter (fitsAllPresents) trees
+solvePart1 (presents, trees) = length $ filter fitsAllPresents trees
   where
   fitsAllPresents :: Tree -> Bool
   fitsAllPresents (Tree width height presents') =
     let totalPresentsArea = foldl' (\acc (ix, count) -> acc + (count * (presentsArea !! ix))) 0 (zip [0..] presents')
         totalArea = width * height
-     in totalPresentsArea <= (totalArea)
+     in totalPresentsArea <= totalArea
 
-  presentsArea = map (length . filter id . concat) presents
+  presentsArea = map (length . concatMap (filter id)) presents
 
 part1 :: String -> Int
 part1 = solvePart1 . parse

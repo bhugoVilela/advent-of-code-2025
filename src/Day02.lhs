@@ -23,6 +23,7 @@ An ID is invalid if its digits can be split into two equal halves. For example:
 \begin{code}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 module Day02 where
 
 import qualified Data.Text as T
@@ -58,7 +59,7 @@ part1 :: String -> Int
 part1 = parse >>> map invalidIdsInRange >>> sum
   where
     invalidIdsInRange :: Range -> Int
-    invalidIdsInRange (a, b) = sum $ filter isInvalid $ [a..b]
+    invalidIdsInRange (a, b) = sum $ filter isInvalid [a..b]
     isInvalid :: Int -> Bool
     isInvalid n = let str = show n
                       [fst, snd] = chunksOf (length str `div` 2) str
@@ -92,7 +93,7 @@ part2 :: String -> Int
 part2 = parse >>> map invalidIdsInRange >>> sum
   where
   invalidIdsInRange :: Range -> Int
-  invalidIdsInRange (a, b) = sum $ filter isInvalid $ [a..b]
+  invalidIdsInRange (a, b) = sum $ filter isInvalid [a..b]
   isInvalid :: Int -> Bool
   isInvalid n = let str = show n
                     divs = [1..length str `div` 2] & filter (\it -> length str `mod` it == 0)

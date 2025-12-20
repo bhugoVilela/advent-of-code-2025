@@ -1,6 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TemplateHaskellQuotes #-}
 module Bench (main) where
 
 import System.IO (readFile')
@@ -18,7 +15,7 @@ main = do
               ]
   _ <- evaluate $ force progs
 
-  defaultMain $ [
+  defaultMain [
     bgroup "2025" $ map (\(day, part, fn) ->
       env (readFile' (getInputFile day)) $ \input ->
         bench (printf "Day%02d-Part%d" day part) $ nf fn input) progs

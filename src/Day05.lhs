@@ -13,11 +13,6 @@ Our task for Part 1: count how many of the given IDs fall within at least one of
 the valid ranges. An ID is "fresh" if it's covered by any range.
 
 \begin{code}
-{-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
-{-# OPTIONS_GHC -Wno-name-shadowing #-}
-{-# LANGUAGE BangPatterns #-}
-
 module Day05 where
 
 import Data.List (sortBy)
@@ -47,14 +42,14 @@ We split on the blank line and parse each section accordingly.
 parse :: String -> Database
 parse str =
   let rows = lines str
-      (rangeLines, idLines) = break (null) rows
+      (rangeLines, idLines) = break null rows
    in Database
         (map parseRange rangeLines)
-        (map read $ tail idLines)
+        (map read $ drop 1 idLines)
   where
   parseRange :: String -> Range
   parseRange str = let (fst', snd') = break (== '-') str
-                    in (read fst', read . tail $ snd')
+                    in (read fst', read . drop 1 $ snd')
 \end{code}
 
 [h3] The Solution
@@ -113,7 +108,7 @@ solvePart2 = snd . foldl' addRange empty . sortBy (compare `on` fst) . ranges
      in (newRange, count + countRange newRange)
 
   empty :: (Range, Int)
-  empty = ((undefined, (-2)), 0)
+  empty = ((undefined, -2), 0)
 
 part2 :: String -> Int
 part2 = solvePart2 . parse
