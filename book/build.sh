@@ -10,6 +10,7 @@ rm -rf out
 pandoc "$INDIR"/*.lhs \
     -o "$OUTDIR"/index.html \
     -f markdown+lhs \
+    --metadata pagetitle="Advent of Code 2025 — Literate Haskell" \
     -t html \
     --toc=true \
     --toc-depth=2 \
